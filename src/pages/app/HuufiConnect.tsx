@@ -53,20 +53,31 @@ export default function HuufiConnect() {
     fetchData();
   }, [user]);
 
-  // Realtime for new messages (unread badge)
+  // Realtime for new messages (unread badge + push notification)
   useEffect(() => {
     if (!user) return;
     const channel = supabase
       .channel("dm-unread")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, (payload) => {
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "direct_messages" }, async (payload) => {
         const msg = payload.new as any;
         if (msg.receiver_id === user.id && !msg.read) {
           setUnreadCounts(prev => ({ ...prev, [msg.sender_id]: (prev[msg.sender_id] || 0) + 1 }));
+          // Send browser notification if not currently viewing that chat
+          if (Notification.permission === "granted" && chatTarget?.userId !== msg.sender_id) {
+            // Fetch sender name
+            const { data: senderProfile } = await supabase.from("profiles").select("display_name").eq("user_id", msg.sender_id).maybeSingle();
+            const senderName = senderProfile?.display_name || "Jemand";
+            new Notification(`Neue Nachricht von ${senderName}`, {
+              body: msg.content.length > 80 ? msg.content.slice(0, 80) + "…" : msg.content,
+              icon: "/favicon.ico",
+              tag: `dm-${msg.sender_id}`,
+            });
+          }
         }
       })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [user]);
+  }, [user, chatTarget]);
 
   const fetchData = async () => {
     if (!user) return;
