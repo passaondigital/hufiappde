@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Lock, Unlock, Upload, FileText, Trash2, Download, FolderOpen, Eye, EyeOff } from "lucide-react";
+import { Lock, Unlock, Upload, FileText, Trash2, Download, FolderOpen, Eye, EyeOff, Fingerprint } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -18,6 +18,8 @@ export default function Tresor() {
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [filterCategory, setFilterCategory] = useState("");
+  const [webauthnSupported, setWebauthnSupported] = useState(false);
+  const [hasWebauthn, setHasWebauthn] = useState(false);
 
   const CATEGORIES = [
     { value: "allgemein", label: "Allgemein" },
@@ -30,9 +32,12 @@ export default function Tresor() {
 
   useEffect(() => {
     if (!user) return;
+    // Check WebAuthn support
+    setWebauthnSupported(!!window.PublicKeyCredential);
     // Check if vault password is set
-    supabase.from("profiles").select("vault_password_hash").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+    supabase.from("profiles").select("vault_password_hash, webauthn_credential_id").eq("user_id", user.id).maybeSingle().then(({ data }) => {
       setHasPassword(!!data?.vault_password_hash);
+      setHasWebauthn(!!data?.webauthn_credential_id);
       setLoading(false);
     });
     supabase.from("horses").select("id, name").eq("user_id", user.id).then(({ data }) => setHorses(data || []));
@@ -70,6 +75,67 @@ export default function Tresor() {
       fetchDocuments();
     } else {
       toast.error("Falsches Passwort");
+    }
+  };
+
+  // WebAuthn: Register biometric
+  const registerWebauthn = async () => {
+    if (!user) return;
+    try {
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+      const credential = await navigator.credentials.create({
+        publicKey: {
+          challenge,
+          rp: { name: "HuufiApp", id: window.location.hostname },
+          user: {
+            id: new TextEncoder().encode(user.id),
+            name: user.email || "user",
+            displayName: "HuufiApp Tresor",
+          },
+          pubKeyCredParams: [{ alg: -7, type: "public-key" }, { alg: -257, type: "public-key" }],
+          authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+          timeout: 60000,
+        },
+      }) as PublicKeyCredential | null;
+
+      if (credential) {
+        const credId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
+        await supabase.from("profiles").update({ webauthn_credential_id: credId }).eq("user_id", user.id);
+        setHasWebauthn(true);
+        toast.success("Fingerabdruck/Face ID eingerichtet!");
+      }
+    } catch (err: any) {
+      toast.error("Biometrie konnte nicht eingerichtet werden: " + (err.message || "Unbekannter Fehler"));
+    }
+  };
+
+  // WebAuthn: Authenticate
+  const authenticateWebauthn = async () => {
+    if (!user) return;
+    try {
+      const { data: profile } = await supabase.from("profiles").select("webauthn_credential_id").eq("user_id", user.id).maybeSingle();
+      if (!profile?.webauthn_credential_id) return;
+
+      const credIdBytes = Uint8Array.from(atob(profile.webauthn_credential_id), c => c.charCodeAt(0));
+      const challenge = crypto.getRandomValues(new Uint8Array(32));
+
+      const assertion = await navigator.credentials.get({
+        publicKey: {
+          challenge,
+          rpId: window.location.hostname,
+          allowCredentials: [{ type: "public-key", id: credIdBytes }],
+          userVerification: "required",
+          timeout: 60000,
+        },
+      });
+
+      if (assertion) {
+        setUnlocked(true);
+        fetchDocuments();
+        toast.success("Verifiziert!");
+      }
+    } catch (err: any) {
+      toast.error("Biometrische Verifizierung fehlgeschlagen");
     }
   };
 
@@ -174,9 +240,21 @@ export default function Tresor() {
             {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
-        <button onClick={unlock} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
-          <Unlock size={14} className="inline mr-2" /> Entsperren
-        </button>
+        <div className="flex gap-3 justify-center">
+          <button onClick={unlock} className="px-6 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+            <Unlock size={14} className="inline mr-2" /> Entsperren
+          </button>
+          {hasWebauthn && webauthnSupported && (
+            <button onClick={authenticateWebauthn} className="px-6 py-2.5 rounded-lg bg-secondary text-secondary-foreground text-sm font-medium hover:bg-secondary/80 transition-colors">
+              <Fingerprint size={14} className="inline mr-2" /> Biometrie
+            </button>
+          )}
+        </div>
+        {webauthnSupported && !hasWebauthn && (
+          <button onClick={registerWebauthn} className="text-xs text-primary hover:underline">
+            Fingerabdruck/Face ID einrichten
+          </button>
+        )}
       </div>
     );
   }

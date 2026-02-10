@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Heart, MessageCircle, FileText, Calendar, Users,
   Menu, X, ChevronLeft, LogOut, Shield, Mic, MicOff, Plus, PenLine,
-  FolderLock, Settings,
+  FolderLock, Settings, Link2,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -20,6 +20,7 @@ const navItems = [
   { path: "/app/termine", icon: Calendar, label: "Termine" },
   { path: "/app/kunden", icon: Users, label: "Kunden" },
   { path: "/app/tresor", icon: FolderLock, label: "Tresor" },
+  { path: "/app/connect", icon: Link2, label: "Connect" },
   { path: "/app/einstellungen", icon: Settings, label: "Einstellungen" },
 ];
 
