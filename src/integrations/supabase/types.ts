@@ -296,6 +296,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          connect_code: string | null
           created_at: string
           display_name: string | null
           id: string
@@ -303,11 +304,14 @@ export type Database = {
           location_lng: number | null
           location_name: string | null
           onboarding_completed: boolean | null
+          referral_code: string | null
           updated_at: string
           user_id: string
           vault_password_hash: string | null
+          webauthn_credential_id: string | null
         }
         Insert: {
+          connect_code?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
@@ -315,11 +319,14 @@ export type Database = {
           location_lng?: number | null
           location_name?: string | null
           onboarding_completed?: boolean | null
+          referral_code?: string | null
           updated_at?: string
           user_id: string
           vault_password_hash?: string | null
+          webauthn_credential_id?: string | null
         }
         Update: {
+          connect_code?: string | null
           created_at?: string
           display_name?: string | null
           id?: string
@@ -327,9 +334,97 @@ export type Database = {
           location_lng?: number | null
           location_name?: string | null
           onboarding_completed?: boolean | null
+          referral_code?: string | null
           updated_at?: string
           user_id?: string
           vault_password_hash?: string | null
+          webauthn_credential_id?: string | null
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          p256dh?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      shared_horses: {
+        Row: {
+          created_at: string
+          horse_id: string
+          id: string
+          owner_id: string
+          shared_with_id: string
+        }
+        Insert: {
+          created_at?: string
+          horse_id: string
+          id?: string
+          owner_id: string
+          shared_with_id: string
+        }
+        Update: {
+          created_at?: string
+          horse_id?: string
+          id?: string
+          owner_id?: string
+          shared_with_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shared_horses_horse_id_fkey"
+            columns: ["horse_id"]
+            isOneToOne: false
+            referencedRelation: "horses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_connections: {
+        Row: {
+          created_at: string
+          id: string
+          receiver_id: string
+          requester_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          receiver_id: string
+          requester_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          receiver_id?: string
+          requester_id?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }

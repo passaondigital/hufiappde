@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Settings, Mail, Lock, User, Check } from "lucide-react";
+import { Settings, Mail, Lock, User, Check, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { PushNotificationToggle } from "@/hooks/usePushNotifications";
 
 export default function Einstellungen() {
   const { user } = useAuth();
@@ -112,6 +113,16 @@ export default function Einstellungen() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
           <Check size={14} /> Passwort ändern
         </button>
+      </motion.div>
+
+      {/* Push Notifications */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="p-5 rounded-xl bg-card border border-border space-y-4">
+        <div className="flex items-center gap-2">
+          <Bell size={18} className="text-primary" />
+          <h3 className="font-semibold text-foreground">Benachrichtigungen</h3>
+        </div>
+        <p className="text-xs text-muted-foreground">Erhalte Erinnerungen für anstehende Termine direkt auf dein Gerät.</p>
+        <PushNotificationToggle />
       </motion.div>
     </div>
   );
