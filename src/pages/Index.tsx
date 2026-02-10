@@ -161,11 +161,13 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <img src={huufiLogo} alt="" className="h-6 w-6" />
-            <span className="text-sm text-muted-foreground">© 2026 HuufiApp</span>
+            <span className="text-sm text-muted-foreground">© 2026 HuufiApp · PASSA ON Digital</span>
           </div>
-          <p className="text-xs text-muted-foreground">
-            Dein KI-gestützter Assistent rund ums Pferd · DACH
-          </p>
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <Link to="/impressum" className="hover:text-foreground transition-colors">Impressum</Link>
+            <Link to="/datenschutz" className="hover:text-foreground transition-colors">Datenschutz</Link>
+            <Link to="/agb" className="hover:text-foreground transition-colors">AGB</Link>
+          </div>
         </div>
       </footer>
     </div>

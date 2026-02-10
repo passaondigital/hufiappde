@@ -5,6 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
+const getAccessToken = async () => {
+  const { data } = await supabase.auth.getSession();
+  return data.session?.access_token || "";
+};
+
 interface Message {
   id: string;
   role: "user" | "assistant";
@@ -51,11 +56,12 @@ export default function Chat() {
     const assistantId = crypto.randomUUID();
 
     try {
+      const token = await getAccessToken();
       const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          Authorization: `Bearer ${token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
         },
         body: JSON.stringify({ messages: allMessages }),
       });

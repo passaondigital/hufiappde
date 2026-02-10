@@ -3,9 +3,10 @@ import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Heart, MessageCircle, FileText, Calendar, Users,
-  Menu, X, ChevronLeft, LogOut,
+  Menu, X, ChevronLeft, LogOut, Shield,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAdmin } from "@/hooks/useAdmin";
 import huufiLogo from "@/assets/huufi-logo.png";
 
 const navItems = [
@@ -20,8 +21,13 @@ const navItems = [
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const { signOut } = useAuth();
+  const { isAdmin } = useAdmin();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const allNavItems = isAdmin
+    ? [...navItems, { path: "/app/admin", icon: Shield, label: "Admin" }]
+    : navItems;
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
@@ -48,7 +54,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
 
         <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-          {navItems.map((item) => {
+          {allNavItems.map((item) => {
             const isActive = item.path === "/app" ? location.pathname === "/app" : location.pathname.startsWith(item.path);
             return (
               <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}
@@ -77,7 +83,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <header className="flex items-center gap-4 px-6 py-4 border-b border-border bg-background/80 backdrop-blur-sm">
           <button onClick={() => setMobileOpen(true)} className="md:hidden text-foreground/60 hover:text-foreground"><Menu size={22} /></button>
           <h1 className="text-lg font-semibold" style={{ fontFamily: "Georgia, serif" }}>
-            {navItems.find((n) => n.path === "/app" ? location.pathname === "/app" : location.pathname.startsWith(n.path))?.label || "HuufiApp"}
+            {allNavItems.find((n) => n.path === "/app" ? location.pathname === "/app" : location.pathname.startsWith(n.path))?.label || "HuufiApp"}
           </h1>
         </header>
         <div className="flex-1 overflow-y-auto p-6">{children}</div>
