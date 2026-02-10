@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Heart, MessageCircle, FileText, Calendar, Users,
   Menu, X, ChevronLeft, LogOut, Shield, Mic, MicOff, Plus, PenLine,
+  FolderLock, Settings,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -18,6 +19,8 @@ const navItems = [
   { path: "/app/notizen", icon: FileText, label: "Notizen" },
   { path: "/app/termine", icon: Calendar, label: "Termine" },
   { path: "/app/kunden", icon: Users, label: "Kunden" },
+  { path: "/app/tresor", icon: FolderLock, label: "Tresor" },
+  { path: "/app/einstellungen", icon: Settings, label: "Einstellungen" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {

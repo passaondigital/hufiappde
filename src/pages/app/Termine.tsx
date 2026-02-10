@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Plus, Calendar, X } from "lucide-react";
+import { Plus, Calendar, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -24,6 +24,8 @@ export default function Termine() {
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ horse_id: "", type: "", date: "", time: "", notes: "" });
   const [loading, setLoading] = useState(true);
+  const [viewMonth, setViewMonth] = useState(new Date());
+  const [viewMode, setViewMode] = useState<"list" | "calendar">("calendar");
 
   const fetchAppointments = async () => {
     if (!user) return;
@@ -59,15 +61,48 @@ export default function Termine() {
 
   const typeColors: Record<string, string> = { Hufbearbeitung: "bg-primary", Tierarzt: "bg-accent", Osteopath: "bg-muted-foreground" };
 
+  // Calendar helpers
+  const daysInMonth = useMemo(() => {
+    const year = viewMonth.getFullYear();
+    const month = viewMonth.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+    const offset = firstDay === 0 ? 6 : firstDay - 1; // Monday start
+    const days: (number | null)[] = Array(offset).fill(null);
+    for (let d = 1; d <= totalDays; d++) days.push(d);
+    return days;
+  }, [viewMonth]);
+
+  const getAptsForDay = (day: number) => {
+    const dateStr = `${viewMonth.getFullYear()}-${String(viewMonth.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    return appointments.filter(a => a.date === dateStr);
+  };
+
+  const monthName = viewMonth.toLocaleDateString("de-DE", { month: "long", year: "numeric" });
+  const today = new Date();
+  const isToday = (day: number) => today.getDate() === day && today.getMonth() === viewMonth.getMonth() && today.getFullYear() === viewMonth.getFullYear();
+
   if (loading) return <p className="text-muted-foreground">Laden...</p>;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-foreground">Termine</h2>
-        <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
-          <Plus size={16} /> Termin anlegen
-        </button>
+        <h2 className="text-2xl font-bold text-foreground">Deine Termine</h2>
+        <div className="flex gap-2">
+          <div className="flex bg-secondary/30 rounded-lg p-0.5">
+            <button onClick={() => setViewMode("calendar")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === "calendar" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
+              Kalender
+            </button>
+            <button onClick={() => setViewMode("list")}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === "list" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
+              Liste
+            </button>
+          </div>
+          <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+            <Plus size={16} /> Termin
+          </button>
+        </div>
       </div>
 
       {showForm && (
@@ -96,30 +131,73 @@ export default function Termine() {
         </motion.div>
       )}
 
-      <div className="space-y-3">
-        {appointments.map((apt, i) => (
-          <motion.div key={apt.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-            className="flex items-center gap-4 p-5 rounded-xl bg-card border border-border hover:border-primary/20 transition-colors"
-          >
-            <div className={`w-1.5 h-12 rounded-full ${typeColors[apt.type] || "bg-muted-foreground"}`} />
-            <div className="w-12 h-12 rounded-lg bg-secondary flex flex-col items-center justify-center">
-              <Calendar size={14} className="text-muted-foreground" />
-              <span className="text-xs font-bold text-foreground mt-0.5">{new Date(apt.date).getDate()}</span>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium text-foreground text-sm">{apt.type}</p>
-              <p className="text-xs text-muted-foreground">{apt.horses?.name || "–"} · {formatDate(apt.date)}{apt.time ? ` · ${apt.time.slice(0, 5)}` : ""}</p>
-              {apt.notes && <p className="text-xs text-muted-foreground mt-1 truncate">{apt.notes}</p>}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {appointments.length === 0 && (
-        <div className="text-center py-12">
-          <Calendar size={40} className="text-muted-foreground/30 mx-auto mb-3" />
-          <p className="text-muted-foreground">Noch keine Termine angelegt.</p>
+      {/* Calendar View */}
+      {viewMode === "calendar" && (
+        <div className="rounded-xl bg-card border border-border p-4">
+          <div className="flex items-center justify-between mb-4">
+            <button onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() - 1))}
+              className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
+              <ChevronLeft size={18} />
+            </button>
+            <h3 className="font-semibold text-foreground capitalize">{monthName}</h3>
+            <button onClick={() => setViewMonth(new Date(viewMonth.getFullYear(), viewMonth.getMonth() + 1))}
+              className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
+              <ChevronRight size={18} />
+            </button>
+          </div>
+          <div className="grid grid-cols-7 gap-px">
+            {["Mo", "Di", "Mi", "Do", "Fr", "Sa", "So"].map(d => (
+              <div key={d} className="text-center text-xs text-muted-foreground font-medium py-2">{d}</div>
+            ))}
+            {daysInMonth.map((day, i) => {
+              if (day === null) return <div key={`empty-${i}`} />;
+              const dayApts = getAptsForDay(day);
+              return (
+                <button key={i}
+                  onClick={() => { setForm({ ...form, date: `${viewMonth.getFullYear()}-${String(viewMonth.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}` }); setShowForm(true); }}
+                  className={`relative p-1.5 sm:p-2 min-h-[3rem] sm:min-h-[4rem] rounded-lg text-left transition-colors hover:bg-secondary/50 ${isToday(day) ? "bg-primary/10 border border-primary/30" : ""}`}>
+                  <span className={`text-xs font-medium ${isToday(day) ? "text-primary" : "text-foreground"}`}>{day}</span>
+                  <div className="mt-0.5 space-y-0.5">
+                    {dayApts.slice(0, 2).map(a => (
+                      <div key={a.id} className={`h-1.5 rounded-full ${typeColors[a.type] || "bg-muted-foreground"}`} title={`${a.type} – ${a.horses?.name || ""}`} />
+                    ))}
+                    {dayApts.length > 2 && <span className="text-[8px] text-muted-foreground">+{dayApts.length - 2}</span>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
         </div>
+      )}
+
+      {/* List View */}
+      {viewMode === "list" && (
+        <>
+          <div className="space-y-3">
+            {appointments.map((apt, i) => (
+              <motion.div key={apt.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
+                className="flex items-center gap-4 p-5 rounded-xl bg-card border border-border hover:border-primary/20 transition-colors"
+              >
+                <div className={`w-1.5 h-12 rounded-full ${typeColors[apt.type] || "bg-muted-foreground"}`} />
+                <div className="w-12 h-12 rounded-lg bg-secondary flex flex-col items-center justify-center">
+                  <Calendar size={14} className="text-muted-foreground" />
+                  <span className="text-xs font-bold text-foreground mt-0.5">{new Date(apt.date).getDate()}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-foreground text-sm">{apt.type}</p>
+                  <p className="text-xs text-muted-foreground">{apt.horses?.name || "–"} · {formatDate(apt.date)}{apt.time ? ` · ${apt.time.slice(0, 5)}` : ""}</p>
+                  {apt.notes && <p className="text-xs text-muted-foreground mt-1 truncate">{apt.notes}</p>}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          {appointments.length === 0 && (
+            <div className="text-center py-12">
+              <Calendar size={40} className="text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-muted-foreground">Noch keine Termine angelegt.</p>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

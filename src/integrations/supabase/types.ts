@@ -211,6 +211,45 @@ export type Database = {
         }
         Relationships: []
       }
+      llm_providers: {
+        Row: {
+          api_key_secret_name: string
+          cost_per_1m_input: number | null
+          cost_per_1m_output: number | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          model_name: string
+          name: string
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          api_key_secret_name: string
+          cost_per_1m_input?: number | null
+          cost_per_1m_output?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          model_name: string
+          name: string
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          api_key_secret_name?: string
+          cost_per_1m_input?: number | null
+          cost_per_1m_output?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          model_name?: string
+          name?: string
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           category: string | null
@@ -263,8 +302,10 @@ export type Database = {
           location_lat: number | null
           location_lng: number | null
           location_name: string | null
+          onboarding_completed: boolean | null
           updated_at: string
           user_id: string
+          vault_password_hash: string | null
         }
         Insert: {
           created_at?: string
@@ -273,8 +314,10 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           location_name?: string | null
+          onboarding_completed?: boolean | null
           updated_at?: string
           user_id: string
+          vault_password_hash?: string | null
         }
         Update: {
           created_at?: string
@@ -283,8 +326,10 @@ export type Database = {
           location_lat?: number | null
           location_lng?: number | null
           location_name?: string | null
+          onboarding_completed?: boolean | null
           updated_at?: string
           user_id?: string
+          vault_password_hash?: string | null
         }
         Relationships: []
       }
@@ -341,6 +386,53 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      vault_documents: {
+        Row: {
+          category: string | null
+          created_at: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string
+          horse_id: string | null
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url: string
+          horse_id?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string
+          horse_id?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vault_documents_horse_id_fkey"
+            columns: ["horse_id"]
+            isOneToOne: false
+            referencedRelation: "horses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

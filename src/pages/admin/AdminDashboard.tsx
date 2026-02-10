@@ -3,8 +3,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { Navigate } from "react-router-dom";
-import { Users, Bot, CreditCard, BarChart3, Shield, ChevronDown, ChevronUp, TrendingUp, MapPin, DollarSign } from "lucide-react";
+import { Users, Bot, CreditCard, BarChart3, Shield, ChevronDown, ChevronUp, TrendingUp, MapPin, DollarSign, Cpu } from "lucide-react";
 import { toast } from "sonner";
+import LLMProviderManager from "@/components/admin/LLMProviderManager";
 
 interface UserRow {
   user_id: string;
@@ -32,7 +33,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ totalUsers: 0, totalHorses: 0, totalAiRequests: 0, premiumUsers: 0, totalTokensIn: 0, totalTokensOut: 0 });
   const [loading, setLoading] = useState(true);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"users" | "costs" | "regions">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "costs" | "regions" | "llm">("users");
   const [aiUsage, setAiUsage] = useState<AiUsageDay[]>([]);
   const [regions, setRegions] = useState<{ name: string; count: number }[]>([]);
 
@@ -176,6 +177,7 @@ export default function AdminDashboard() {
           { key: "users" as const, label: "Nutzer", icon: Users },
           { key: "costs" as const, label: "KI-Kosten", icon: DollarSign },
           { key: "regions" as const, label: "Regionen", icon: MapPin },
+          { key: "llm" as const, label: "LLM-APIs", icon: Cpu },
         ].map((tab) => (
           <button
             key={tab.key}
@@ -337,6 +339,13 @@ export default function AdminDashboard() {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {/* LLM-APIs Tab */}
+      {activeTab === "llm" && (
+        <div className="rounded-xl bg-card border border-border p-5">
+          <LLMProviderManager />
         </div>
       )}
     </div>

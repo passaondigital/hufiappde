@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Calendar, Heart, FileText, MessageCircle, Plus } from "lucide-react";
+import { Calendar, Heart, FileText, MessageCircle, Plus, FolderLock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import OnboardingTour from "@/components/OnboardingTour";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -11,16 +12,19 @@ export default function Dashboard() {
   const [notesCount, setNotesCount] = useState(0);
   const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
   const [recentNotes, setRecentNotes] = useState<any[]>([]);
+  const [displayName, setDisplayName] = useState("");
 
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [horses, notes, apts, recent] = await Promise.all([
+      const [horses, notes, apts, recent, profile] = await Promise.all([
         supabase.from("horses").select("id", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("notes").select("id", { count: "exact", head: true }).eq("user_id", user.id),
         supabase.from("appointments").select("*, horses(name)").eq("user_id", user.id).gte("date", new Date().toISOString().split("T")[0]).order("date").limit(3),
         supabase.from("notes").select("*, horses(name)").eq("user_id", user.id).order("created_at", { ascending: false }).limit(4),
+        supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle(),
       ]);
+      setDisplayName(profile.data?.display_name || "");
       setHorsesCount(horses.count || 0);
       setNotesCount(notes.count || 0);
       setUpcomingAppointments(apts.data || []);
@@ -29,10 +33,20 @@ export default function Dashboard() {
     load();
   }, [user]);
 
+  const greeting = () => {
+    const h = new Date().getHours();
+    if (h < 12) return "Guten Morgen";
+    if (h < 18) return "Guten Tag";
+    return "Guten Abend";
+  };
+
+  const firstName = displayName?.split(" ")[0] || "";
+
   const stats = [
     { label: "Pferde", value: horsesCount.toString(), icon: Heart, path: "/app/pferde" },
     { label: "Nächste Termine", value: upcomingAppointments.length.toString(), icon: Calendar, path: "/app/termine" },
     { label: "Notizen", value: notesCount.toString(), icon: FileText, path: "/app/notizen" },
+    { label: "Tresor", value: "🔒", icon: FolderLock, path: "/app/tresor" },
     { label: "Assistent", value: "KI", icon: MessageCircle, path: "/app/chat" },
   ];
 
@@ -41,9 +55,10 @@ export default function Dashboard() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-8">
+      <OnboardingTour />
       <div>
-        <h2 className="text-2xl font-bold text-foreground">Guten Tag 👋</h2>
-        <p className="text-muted-foreground mt-1">Hier ist dein Überblick.</p>
+        <h2 className="text-2xl font-bold text-foreground">{greeting()}{firstName ? `, ${firstName}` : ""} 👋</h2>
+        <p className="text-muted-foreground mt-1">Hier ist dein persönlicher Überblick.</p>
       </div>
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
