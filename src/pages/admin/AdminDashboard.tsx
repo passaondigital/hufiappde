@@ -3,10 +3,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { Navigate } from "react-router-dom";
-import { Users, Bot, CreditCard, BarChart3, Shield, ChevronDown, ChevronUp, TrendingUp, MapPin, DollarSign, Cpu, Sparkles } from "lucide-react";
+import { Users, Bot, CreditCard, BarChart3, Shield, ChevronDown, ChevronUp, TrendingUp, MapPin, DollarSign, Cpu, Sparkles, Target } from "lucide-react";
 import { toast } from "sonner";
 import LLMProviderManager from "@/components/admin/LLMProviderManager";
 import FeatureManager from "@/components/admin/FeatureManager";
+import MvpDashboard from "@/components/admin/MvpDashboard";
 
 interface UserRow {
   user_id: string;
@@ -34,7 +35,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ totalUsers: 0, totalHorses: 0, totalAiRequests: 0, premiumUsers: 0, totalTokensIn: 0, totalTokensOut: 0 });
   const [loading, setLoading] = useState(true);
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<"users" | "costs" | "regions" | "llm" | "features">("users");
+  const [activeTab, setActiveTab] = useState<"users" | "costs" | "regions" | "llm" | "features" | "mvp">("mvp");
   const [aiUsage, setAiUsage] = useState<AiUsageDay[]>([]);
   const [regions, setRegions] = useState<{ name: string; count: number }[]>([]);
 
@@ -175,6 +176,7 @@ export default function AdminDashboard() {
       {/* Tabs */}
       <div className="flex gap-1 p-1 rounded-lg bg-secondary/30 overflow-x-auto">
         {[
+          { key: "mvp" as const, label: "MVP-Learning", icon: Target },
           { key: "users" as const, label: "Nutzer", icon: Users },
           { key: "costs" as const, label: "KI-Kosten", icon: DollarSign },
           { key: "regions" as const, label: "Regionen", icon: MapPin },
@@ -355,6 +357,13 @@ export default function AdminDashboard() {
       {activeTab === "features" && (
         <div className="rounded-xl bg-card border border-border p-5">
           <FeatureManager />
+        </div>
+      )}
+
+      {/* MVP Learning Tab */}
+      {activeTab === "mvp" && (
+        <div className="rounded-xl bg-card border border-border p-5">
+          <MvpDashboard />
         </div>
       )}
     </div>

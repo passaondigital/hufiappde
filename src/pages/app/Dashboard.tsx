@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import OnboardingTour from "@/components/OnboardingTour";
 import WeatherWidget from "@/components/WeatherWidget";
+import MvpQuestionPrompt from "@/components/MvpQuestionPrompt";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -57,6 +58,7 @@ export default function Dashboard() {
   return (
     <div className="max-w-5xl mx-auto space-y-8">
       <OnboardingTour />
+      <MvpQuestionPrompt />
       <div>
         <h2 className="text-2xl font-bold text-foreground">{greeting()}{firstName ? `, ${firstName}` : ""} \uD83D\uDC4B</h2>
         <p className="text-muted-foreground mt-1">Hier ist dein persoenlicher Ueberblick.</p>

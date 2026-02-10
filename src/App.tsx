@@ -21,6 +21,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import Tresor from "./pages/app/Tresor";
 import Einstellungen from "./pages/app/Einstellungen";
 import HuufiConnect from "./pages/app/HuufiConnect";
+import Feedback from "./pages/app/Feedback";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +49,7 @@ function AppRoutes() {
       <Route path="/app/tresor" element={<ProtectedRoute><AppLayout><Tresor /></AppLayout></ProtectedRoute>} />
       <Route path="/app/einstellungen" element={<ProtectedRoute><AppLayout><Einstellungen /></AppLayout></ProtectedRoute>} />
       <Route path="/app/connect" element={<ProtectedRoute><AppLayout><HuufiConnect /></AppLayout></ProtectedRoute>} />
+      <Route path="/app/feedback" element={<ProtectedRoute><AppLayout><Feedback /></AppLayout></ProtectedRoute>} />
       <Route path="/app/admin" element={<ProtectedRoute><AppLayout><AdminDashboard /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
