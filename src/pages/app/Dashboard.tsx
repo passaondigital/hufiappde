@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import OnboardingTour from "@/components/OnboardingTour";
+import WeatherWidget from "@/components/WeatherWidget";
 
 export default function Dashboard() {
   const { user } = useAuth();
@@ -44,9 +45,9 @@ export default function Dashboard() {
 
   const stats = [
     { label: "Pferde", value: horsesCount.toString(), icon: Heart, path: "/app/pferde" },
-    { label: "Nächste Termine", value: upcomingAppointments.length.toString(), icon: Calendar, path: "/app/termine" },
+    { label: "Naechste Termine", value: upcomingAppointments.length.toString(), icon: Calendar, path: "/app/termine" },
     { label: "Notizen", value: notesCount.toString(), icon: FileText, path: "/app/notizen" },
-    { label: "Tresor", value: "🔒", icon: FolderLock, path: "/app/tresor" },
+    { label: "Tresor", value: "\uD83D\uDD12", icon: FolderLock, path: "/app/tresor" },
     { label: "Assistent", value: "KI", icon: MessageCircle, path: "/app/chat" },
   ];
 
@@ -57,9 +58,12 @@ export default function Dashboard() {
     <div className="max-w-5xl mx-auto space-y-8">
       <OnboardingTour />
       <div>
-        <h2 className="text-2xl font-bold text-foreground">{greeting()}{firstName ? `, ${firstName}` : ""} 👋</h2>
-        <p className="text-muted-foreground mt-1">Hier ist dein persönlicher Überblick.</p>
+        <h2 className="text-2xl font-bold text-foreground">{greeting()}{firstName ? `, ${firstName}` : ""} \uD83D\uDC4B</h2>
+        <p className="text-muted-foreground mt-1">Hier ist dein persoenlicher Ueberblick.</p>
       </div>
+
+      {/* Weather */}
+      <WeatherWidget />
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat, i) => (
@@ -78,7 +82,7 @@ export default function Dashboard() {
       <div className="grid md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-semibold text-foreground">Nächste Termine</h3>
+            <h3 className="text-lg font-semibold text-foreground">Naechste Termine</h3>
             <Link to="/app/termine" className="text-sm text-primary hover:underline">Alle</Link>
           </div>
           {upcomingAppointments.length === 0 ? (
@@ -89,7 +93,7 @@ export default function Dashboard() {
                 <div key={apt.id} className="flex items-center gap-4 p-4 rounded-xl bg-card border border-border">
                   <div className="w-2 h-10 rounded-full bg-primary" />
                   <div className="flex-1">
-                    <p className="font-medium text-foreground">{apt.horses?.name || "–"}</p>
+                    <p className="font-medium text-foreground">{apt.horses?.name || "\u2013"}</p>
                     <p className="text-sm text-muted-foreground">{apt.type}</p>
                   </div>
                   <span className="text-sm text-muted-foreground">{formatDate(apt.date)}</span>
