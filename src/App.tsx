@@ -48,6 +48,8 @@ function AppRoutes() {
   );
 }
 
+import CookieBanner from "./components/CookieBanner";
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -56,6 +58,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <AppRoutes />
+          <CookieBanner />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
