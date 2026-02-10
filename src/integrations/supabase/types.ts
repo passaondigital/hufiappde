@@ -313,6 +313,33 @@ export type Database = {
         }
         Relationships: []
       }
+      mvp_question_responses: {
+        Row: {
+          created_at: string
+          id: string
+          question_key: string
+          response_rating: number | null
+          response_text: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question_key: string
+          response_rating?: number | null
+          response_text?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question_key?: string
+          response_rating?: number | null
+          response_text?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       notes: {
         Row: {
           category: string | null
@@ -370,6 +397,7 @@ export type Database = {
           referral_code: string | null
           updated_at: string
           user_id: string
+          user_type: string | null
           vault_password_hash: string | null
           webauthn_credential_id: string | null
         }
@@ -385,6 +413,7 @@ export type Database = {
           referral_code?: string | null
           updated_at?: string
           user_id: string
+          user_type?: string | null
           vault_password_hash?: string | null
           webauthn_credential_id?: string | null
         }
@@ -400,6 +429,7 @@ export type Database = {
           referral_code?: string | null
           updated_at?: string
           user_id?: string
+          user_type?: string | null
           vault_password_hash?: string | null
           webauthn_credential_id?: string | null
         }
@@ -488,6 +518,51 @@ export type Database = {
           requester_id?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      user_feedback: {
+        Row: {
+          admin_response: string | null
+          category: string
+          content: string
+          context: string | null
+          created_at: string
+          id: string
+          priority: string | null
+          rating: number | null
+          status: string
+          subcategory: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_response?: string | null
+          category?: string
+          content: string
+          context?: string | null
+          created_at?: string
+          id?: string
+          priority?: string | null
+          rating?: number | null
+          status?: string
+          subcategory?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_response?: string | null
+          category?: string
+          content?: string
+          context?: string | null
+          created_at?: string
+          id?: string
+          priority?: string | null
+          rating?: number | null
+          status?: string
+          subcategory?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

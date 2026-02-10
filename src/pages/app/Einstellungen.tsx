@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { PushNotificationToggle } from "@/hooks/usePushNotifications";
+import FeedbackSection from "@/components/FeedbackSection";
 
 export default function Einstellungen() {
   const { user } = useAuth();
@@ -123,6 +124,11 @@ export default function Einstellungen() {
         </div>
         <p className="text-xs text-muted-foreground">Erhalte Erinnerungen für anstehende Termine direkt auf dein Gerät.</p>
         <PushNotificationToggle />
+      </motion.div>
+
+      {/* Feedback Section */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="p-5 rounded-xl bg-card border border-border">
+        <FeedbackSection />
       </motion.div>
     </div>
   );
