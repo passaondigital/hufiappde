@@ -11,6 +11,7 @@ import { useAdmin } from "@/hooks/useAdmin";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import huufiLogo from "@/assets/huufi-logo.png";
+import InstallPrompt from "@/components/InstallPrompt";
 
 const navItems = [
   { path: "/app", icon: LayoutDashboard, label: "Dashboard" },
@@ -181,6 +182,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </button>
       </aside>
 
+      <InstallPrompt />
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="flex items-center gap-4 px-6 py-4 border-b border-border bg-background/80 backdrop-blur-sm">
           <button onClick={() => setMobileOpen(true)} className="md:hidden text-foreground/60 hover:text-foreground"><Menu size={22} /></button>
