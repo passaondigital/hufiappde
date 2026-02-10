@@ -1,54 +1,71 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Plus, Calendar, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 interface Appointment {
   id: string;
-  horse: string;
+  horse_id: string | null;
   type: string;
   date: string;
-  time: string;
-  notes: string;
+  time: string | null;
+  notes: string | null;
+  horses?: { name: string } | null;
 }
 
-const initialAppointments: Appointment[] = [
-  { id: "1", horse: "Luna", type: "Hufbearbeitung", date: "2026-02-13", time: "10:00", notes: "Hufpfleger Herr Müller" },
-  { id: "2", horse: "Nero", type: "Tierarzt", date: "2026-02-18", time: "14:30", notes: "Jährliche Impfung + Zahnkontrolle" },
-  { id: "3", horse: "Stella", type: "Tierarzt", date: "2026-03-05", time: "09:00", notes: "Arthrose-Kontrolle" },
-  { id: "4", horse: "Luna", type: "Osteopath", date: "2026-02-25", time: "11:00", notes: "Rückenprobleme überprüfen" },
-];
-
-const typeColors: Record<string, string> = {
-  Hufbearbeitung: "bg-primary",
-  Tierarzt: "bg-accent",
-  Osteopath: "bg-muted-foreground",
-};
+interface Horse { id: string; name: string; }
 
 export default function Termine() {
-  const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
+  const { user } = useAuth();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [horses, setHorses] = useState<Horse[]>([]);
   const [showForm, setShowForm] = useState(false);
-  const [form, setForm] = useState({ horse: "", type: "", date: "", time: "", notes: "" });
+  const [form, setForm] = useState({ horse_id: "", type: "", date: "", time: "", notes: "" });
+  const [loading, setLoading] = useState(true);
 
-  const sorted = [...appointments].sort((a, b) => a.date.localeCompare(b.date));
-
-  const handleAdd = () => {
-    if (!form.horse || !form.type || !form.date) return;
-    setAppointments([...appointments, { id: Date.now().toString(), ...form }]);
-    setForm({ horse: "", type: "", date: "", time: "", notes: "" });
-    setShowForm(false);
+  const fetchAppointments = async () => {
+    if (!user) return;
+    const { data } = await supabase.from("appointments").select("*, horses(name)").eq("user_id", user.id).order("date");
+    setAppointments((data || []) as Appointment[]);
+    setLoading(false);
   };
 
-  const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
+  useEffect(() => {
+    if (!user) return;
+    fetchAppointments();
+    supabase.from("horses").select("id, name").eq("user_id", user.id).then(({ data }) => setHorses(data || []));
+  }, [user]);
+
+  const handleAdd = async () => {
+    if (!form.type || !form.date || !user) return;
+    const { error } = await supabase.from("appointments").insert({
+      user_id: user.id,
+      horse_id: form.horse_id || null,
+      type: form.type,
+      date: form.date,
+      time: form.time || null,
+      notes: form.notes || null,
+    });
+    if (error) { toast.error("Fehler beim Speichern"); return; }
+    toast.success("Termin angelegt");
+    setForm({ horse_id: "", type: "", date: "", time: "", notes: "" });
+    setShowForm(false);
+    fetchAppointments();
+  };
+
+  const formatDate = (d: string) => new Date(d).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long" });
+
+  const typeColors: Record<string, string> = { Hufbearbeitung: "bg-primary", Tierarzt: "bg-accent", Osteopath: "bg-muted-foreground" };
+
+  if (loading) return <p className="text-muted-foreground">Laden...</p>;
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-foreground">Termine</h2>
-        <button
-          onClick={() => setShowForm(true)}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity"
-        >
+        <button onClick={() => setShowForm(true)} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
           <Plus size={16} /> Termin anlegen
         </button>
       </div>
@@ -60,7 +77,10 @@ export default function Termine() {
             <button onClick={() => setShowForm(false)} className="text-muted-foreground hover:text-foreground"><X size={18} /></button>
           </div>
           <div className="grid sm:grid-cols-2 gap-3">
-            <input placeholder="Pferd *" value={form.horse} onChange={(e) => setForm({ ...form, horse: e.target.value })} className="px-4 py-2.5 rounded-lg bg-background border border-input text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            <select value={form.horse_id} onChange={(e) => setForm({ ...form, horse_id: e.target.value })} className="px-4 py-2.5 rounded-lg bg-background border border-input text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
+              <option value="">Pferd zuordnen</option>
+              {horses.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+            </select>
             <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })} className="px-4 py-2.5 rounded-lg bg-background border border-input text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring">
               <option value="">Typ wählen *</option>
               <option>Hufbearbeitung</option>
@@ -77,29 +97,30 @@ export default function Termine() {
       )}
 
       <div className="space-y-3">
-        {sorted.map((apt, i) => (
-          <motion.div
-            key={apt.id}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.04 }}
+        {appointments.map((apt, i) => (
+          <motion.div key={apt.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
             className="flex items-center gap-4 p-5 rounded-xl bg-card border border-border hover:border-primary/20 transition-colors"
           >
             <div className={`w-1.5 h-12 rounded-full ${typeColors[apt.type] || "bg-muted-foreground"}`} />
             <div className="w-12 h-12 rounded-lg bg-secondary flex flex-col items-center justify-center">
               <Calendar size={14} className="text-muted-foreground" />
-              <span className="text-xs font-bold text-foreground mt-0.5">
-                {new Date(apt.date).getDate()}
-              </span>
+              <span className="text-xs font-bold text-foreground mt-0.5">{new Date(apt.date).getDate()}</span>
             </div>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-foreground text-sm">{apt.type}</p>
-              <p className="text-xs text-muted-foreground">{apt.horse} · {formatDate(apt.date)}{apt.time ? ` · ${apt.time}` : ""}</p>
+              <p className="text-xs text-muted-foreground">{apt.horses?.name || "–"} · {formatDate(apt.date)}{apt.time ? ` · ${apt.time.slice(0, 5)}` : ""}</p>
               {apt.notes && <p className="text-xs text-muted-foreground mt-1 truncate">{apt.notes}</p>}
             </div>
           </motion.div>
         ))}
       </div>
+
+      {appointments.length === 0 && (
+        <div className="text-center py-12">
+          <Calendar size={40} className="text-muted-foreground/30 mx-auto mb-3" />
+          <p className="text-muted-foreground">Noch keine Termine angelegt.</p>
+        </div>
+      )}
     </div>
   );
 }
