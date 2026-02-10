@@ -178,6 +178,7 @@ export type Database = {
           breed: string | null
           created_at: string
           id: string
+          image_url: string | null
           name: string
           notes: string | null
           updated_at: string
@@ -189,6 +190,7 @@ export type Database = {
           breed?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           name: string
           notes?: string | null
           updated_at?: string
@@ -200,6 +202,7 @@ export type Database = {
           breed?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           name?: string
           notes?: string | null
           updated_at?: string
@@ -210,6 +213,7 @@ export type Database = {
       }
       notes: {
         Row: {
+          category: string | null
           content: string
           created_at: string
           horse_id: string | null
@@ -220,6 +224,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          category?: string | null
           content: string
           created_at?: string
           horse_id?: string | null
@@ -230,6 +235,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          category?: string | null
           content?: string
           created_at?: string
           horse_id?: string | null
@@ -254,6 +260,9 @@ export type Database = {
           created_at: string
           display_name: string | null
           id: string
+          location_lat: number | null
+          location_lng: number | null
+          location_name: string | null
           updated_at: string
           user_id: string
         }
@@ -261,6 +270,9 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          location_name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -268,6 +280,9 @@ export type Database = {
           created_at?: string
           display_name?: string | null
           id?: string
+          location_lat?: number | null
+          location_lng?: number | null
+          location_name?: string | null
           updated_at?: string
           user_id?: string
         }
