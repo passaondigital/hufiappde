@@ -32,6 +32,7 @@ export default function Notizen() {
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState("");
+  const [voiceHorseId, setVoiceHorseId] = useState("");
   const recognitionRef = useRef<any>(null);
 
   const fetchNotes = async () => {
@@ -117,10 +118,11 @@ export default function Notizen() {
 
   const saveVoiceNote = async () => {
     if (!transcript.trim() || !user) return;
-    const title = "Sprachnotiz – " + new Date().toLocaleDateString("de-DE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    const horseName = horses.find((h) => h.id === voiceHorseId)?.name;
+    const title = (horseName ? `${horseName} – ` : "") + "Sprachnotiz – " + new Date().toLocaleDateString("de-DE", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
     const { error } = await supabase.from("notes").insert({
       user_id: user.id,
-      horse_id: null,
+      horse_id: voiceHorseId || null,
       title,
       content: transcript.trim(),
       type: "voice",
@@ -128,6 +130,7 @@ export default function Notizen() {
     if (error) { toast.error("Fehler beim Speichern"); return; }
     toast.success("Sprachnotiz gespeichert");
     setTranscript("");
+    setVoiceHorseId("");
     fetchNotes();
   };
 
@@ -171,13 +174,19 @@ export default function Notizen() {
             <Mic size={16} className={`text-primary ${isRecording ? "animate-pulse" : ""}`} />
             <h3 className="font-semibold text-foreground text-sm">{isRecording ? "Aufnahme läuft..." : "Transkription"}</h3>
           </div>
+          <select value={voiceHorseId} onChange={(e) => setVoiceHorseId(e.target.value)}
+            className="w-full sm:w-auto px-4 py-2 rounded-lg bg-background border border-input text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          >
+            <option value="">Pferd zuordnen (optional)</option>
+            {horses.map((h) => <option key={h.id} value={h.id}>{h.name}</option>)}
+          </select>
           <p className="text-sm text-foreground leading-relaxed min-h-[2rem]">
             {transcript || "Sprich jetzt..."}
           </p>
           {!isRecording && transcript && (
             <div className="flex gap-2">
               <button onClick={saveVoiceNote} className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">Speichern</button>
-              <button onClick={() => setTranscript("")} className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground text-sm hover:bg-secondary/80 transition-colors">Verwerfen</button>
+              <button onClick={() => { setTranscript(""); setVoiceHorseId(""); }} className="px-4 py-2 rounded-lg bg-secondary text-secondary-foreground text-sm hover:bg-secondary/80 transition-colors">Verwerfen</button>
             </div>
           )}
         </div>

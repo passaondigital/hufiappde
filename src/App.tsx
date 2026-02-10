@@ -7,6 +7,9 @@ import { AuthProvider, useAuth } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Impressum from "./pages/Impressum";
+import Datenschutz from "./pages/Datenschutz";
+import AGB from "./pages/AGB";
 import AppLayout from "./components/AppLayout";
 import Dashboard from "./pages/app/Dashboard";
 import Pferde from "./pages/app/Pferde";
@@ -14,6 +17,7 @@ import Chat from "./pages/app/Chat";
 import Notizen from "./pages/app/Notizen";
 import Termine from "./pages/app/Termine";
 import Kunden from "./pages/app/Kunden";
+import AdminDashboard from "./pages/admin/AdminDashboard";
 
 const queryClient = new QueryClient();
 
@@ -29,12 +33,16 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<Index />} />
       <Route path="/auth" element={<Auth />} />
+      <Route path="/impressum" element={<Impressum />} />
+      <Route path="/datenschutz" element={<Datenschutz />} />
+      <Route path="/agb" element={<AGB />} />
       <Route path="/app" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
       <Route path="/app/pferde" element={<ProtectedRoute><AppLayout><Pferde /></AppLayout></ProtectedRoute>} />
       <Route path="/app/chat" element={<ProtectedRoute><AppLayout><Chat /></AppLayout></ProtectedRoute>} />
       <Route path="/app/notizen" element={<ProtectedRoute><AppLayout><Notizen /></AppLayout></ProtectedRoute>} />
       <Route path="/app/termine" element={<ProtectedRoute><AppLayout><Termine /></AppLayout></ProtectedRoute>} />
       <Route path="/app/kunden" element={<ProtectedRoute><AppLayout><Kunden /></AppLayout></ProtectedRoute>} />
+      <Route path="/app/admin" element={<ProtectedRoute><AppLayout><AdminDashboard /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

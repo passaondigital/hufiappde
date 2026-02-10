@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,6 +14,47 @@ serve(async (req) => {
     const { messages } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+
+    // Extract user from auth header
+    const authHeader = req.headers.get("authorization") || "";
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+
+    // Try to get user from JWT
+    let userId: string | null = null;
+    if (authHeader.startsWith("Bearer ")) {
+      const token = authHeader.replace("Bearer ", "");
+      // If it's not the anon key, it's a user JWT
+      if (token !== supabaseAnonKey) {
+        const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+          global: { headers: { Authorization: `Bearer ${token}` } },
+        });
+        const { data: { user } } = await supabase.auth.getUser(token);
+        userId = user?.id || null;
+      }
+    }
+
+    // Check AI limit if we have a user
+    if (userId) {
+      const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+      const { data: limitResult } = await adminClient.rpc("check_ai_limit", { p_user_id: userId });
+
+      if (limitResult && !limitResult.allowed) {
+        return new Response(JSON.stringify({ error: limitResult.reason }), {
+          status: 429,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Log usage
+      await adminClient.from("ai_usage_log").insert({
+        user_id: userId,
+        tokens_in: 0,
+        tokens_out: 0,
+        model: "gemini-3-flash-preview",
+      });
+    }
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
