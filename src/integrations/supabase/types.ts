@@ -121,6 +121,42 @@ export type Database = {
           },
         ]
       }
+      business_strategies: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          id: string
+          priority: string | null
+          source: string
+          status: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string
+          id?: string
+          priority?: string | null
+          source?: string
+          status?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          id?: string
+          priority?: string | null
+          source?: string
+          status?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           content: string
@@ -274,6 +310,42 @@ export type Database = {
         }
         Relationships: []
       }
+      knowledge_vault: {
+        Row: {
+          category: string
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          metadata: Json | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          category?: string
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          category?: string
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       llm_providers: {
         Row: {
           api_key_secret_name: string
@@ -312,6 +384,53 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      medical_logs: {
+        Row: {
+          created_at: string
+          findings: string | null
+          horse_id: string | null
+          id: string
+          log_type: string
+          measurements: Json | null
+          source: string
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          findings?: string | null
+          horse_id?: string | null
+          id?: string
+          log_type?: string
+          measurements?: Json | null
+          source?: string
+          title?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          findings?: string | null
+          horse_id?: string | null
+          id?: string
+          log_type?: string
+          measurements?: Json | null
+          source?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "medical_logs_horse_id_fkey"
+            columns: ["horse_id"]
+            isOneToOne: false
+            referencedRelation: "horses"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       mvp_question_responses: {
         Row: {
@@ -666,6 +785,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      voice_usage_log: {
+        Row: {
+          agent_id: string | null
+          created_at: string
+          duration_seconds: number
+          id: string
+          routing_result: string | null
+          transcript: string | null
+          user_id: string
+        }
+        Insert: {
+          agent_id?: string | null
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          routing_result?: string | null
+          transcript?: string | null
+          user_id: string
+        }
+        Update: {
+          agent_id?: string | null
+          created_at?: string
+          duration_seconds?: number
+          id?: string
+          routing_result?: string | null
+          transcript?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
