@@ -21,22 +21,38 @@ serve(async (req) => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Try to get user from JWT
-    let userId: string | null = null;
-    if (authHeader.startsWith("Bearer ")) {
-      const token = authHeader.replace("Bearer ", "");
-      // If it's not the anon key, it's a user JWT
-      if (token !== supabaseAnonKey) {
-        const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-          global: { headers: { Authorization: `Bearer ${token}` } },
-        });
-        const { data: { user } } = await supabase.auth.getUser(token);
-        userId = user?.id || null;
-      }
+    // Require authentication
+    if (!authHeader.startsWith("Bearer ")) {
+      return new Response(JSON.stringify({ error: "Authentifizierung erforderlich" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
-    // Check AI limit if we have a user
-    if (userId) {
+    const token = authHeader.replace("Bearer ", "");
+    // Reject if only anon key is provided
+    if (token === supabaseAnonKey) {
+      return new Response(JSON.stringify({ error: "Authentifizierung erforderlich" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const supabaseClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: { user } } = await supabaseClient.auth.getUser(token);
+    const userId = user?.id;
+
+    if (!userId) {
+      return new Response(JSON.stringify({ error: "Authentifizierung erforderlich" }), {
+        status: 401,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Check AI limit
+    {
       const adminClient = createClient(supabaseUrl, supabaseServiceKey);
       const { data: limitResult } = await adminClient.rpc("check_ai_limit", { p_user_id: userId });
 
