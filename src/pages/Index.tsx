@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MessageCircle, Heart, Calendar, FileText, Mic, Shield, ArrowRight, ChevronRight, Link2, CloudSun, FolderLock, QrCode, Sparkles, Star, Zap, Bell, HelpCircle } from "lucide-react";
+import { MessageCircle, Heart, Calendar, FileText, Mic, Shield, ArrowRight, ChevronRight, Link2, CloudSun, FolderLock, QrCode, Sparkles, Star, Zap, Bell, HelpCircle, LogIn, LogOut } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import huufiLogo from "@/assets/huufi-logo.png";
 import heroBg from "@/assets/hero-bg.jpg";
 import FaqSection from "@/components/FaqSection";
@@ -22,6 +23,7 @@ interface Feature {
 }
 
 export default function LandingPage() {
+  const { user, signOut } = useAuth();
   const [features, setFeatures] = useState<Feature[]>([]);
 
   useEffect(() => {
@@ -41,9 +43,20 @@ export default function LandingPage() {
           <div className="flex items-center gap-4">
             <a href="#features" className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors">Funktionen</a>
             <a href="#faq" className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
-            <Link to="/app" className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
-              Zur App <ArrowRight size={14} />
-            </Link>
+            {user ? (
+              <>
+                <Link to="/app" className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+                  Zur App <ArrowRight size={14} />
+                </Link>
+                <button onClick={signOut} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors">
+                  <LogOut size={14} /> Abmelden
+                </button>
+              </>
+            ) : (
+              <Link to="/auth" className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
+                <LogIn size={14} /> Anmelden
+              </Link>
+            )}
           </div>
         </div>
       </nav>
