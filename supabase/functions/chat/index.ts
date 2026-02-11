@@ -15,26 +15,21 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // Extract user from auth header
     const authHeader = req.headers.get("authorization") || "";
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
-    // Require authentication
     if (!authHeader.startsWith("Bearer ")) {
       return new Response(JSON.stringify({ error: "Authentifizierung erforderlich" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const token = authHeader.replace("Bearer ", "");
-    // Reject if only anon key is provided
     if (token === supabaseAnonKey) {
       return new Response(JSON.stringify({ error: "Authentifizierung erforderlich" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -42,33 +37,86 @@ serve(async (req) => {
       global: { headers: { Authorization: `Bearer ${token}` } },
     });
     const { data: { user } } = await supabaseClient.auth.getUser(token);
-    const userId = user?.id;
-
-    if (!userId) {
+    if (!user) {
       return new Response(JSON.stringify({ error: "Authentifizierung erforderlich" }), {
-        status: 401,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey);
+
     // Check AI limit
-    {
-      const adminClient = createClient(supabaseUrl, supabaseServiceKey);
-      const { data: limitResult } = await adminClient.rpc("check_ai_limit", { p_user_id: userId });
+    const { data: limitResult } = await adminClient.rpc("check_ai_limit", { p_user_id: user.id });
+    if (limitResult && !limitResult.allowed) {
+      return new Response(JSON.stringify({ error: limitResult.reason }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
-      if (limitResult && !limitResult.allowed) {
-        return new Response(JSON.stringify({ error: limitResult.reason }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+    // Load user context: profile, role, horses, recent knowledge
+    const [{ data: profile }, { data: roleData }, { data: horses }, { data: recentKnowledge }] = await Promise.all([
+      adminClient.from("profiles").select("user_type, display_name").eq("user_id", user.id).maybeSingle(),
+      adminClient.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle(),
+      adminClient.from("horses").select("id, name, breed, age, notes").eq("user_id", user.id).limit(10),
+      adminClient.from("knowledge_vault").select("content, category, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
+    ]);
 
-      // Log usage
-      await adminClient.from("ai_usage_log").insert({
-        user_id: userId,
-        tokens_in: 0,
-        tokens_out: 0,
-        model: "gemini-3-flash-preview",
+    const isAdmin = !!roleData;
+    const userMode = profile?.user_type || "personal";
+
+    // Build mode-dependent system prompt
+    let modePrompt = "";
+    if (isAdmin) {
+      const { data: strategies } = await adminClient.from("business_strategies")
+        .select("content, category, status").eq("user_id", user.id)
+        .order("created_at", { ascending: false }).limit(5);
+
+      modePrompt = `Du sprichst mit ${profile?.display_name || "Pascal"}, dem Admin und Gründer von HuufiApp.
+Modus: ADMIN – Vollzugriff auf Knowledge Vault, Business-Strategien und alle Pferdedaten.
+Du bist sein persönlicher Strategie- und Wissensassistent.
+
+Letzte Strategien: ${strategies?.map(s => `[${s.category}/${s.status}] ${s.content}`).join("\n") || "Keine"}`;
+    } else if (userMode === "business") {
+      modePrompt = `Du sprichst mit ${profile?.display_name || "einem Profi"}.
+Modus: BUSINESS – Professioneller Assistent für Kundenmanagement, Terminplanung und Hufpflege.`;
+    } else {
+      modePrompt = `Du sprichst mit ${profile?.display_name || "einem Pferdebesitzer"}.
+Modus: PERSÖNLICH – Empathischer Begleiter für Pferdegesundheit und -pflege.`;
+    }
+
+    const horsesCtx = horses?.length
+      ? `\n\nPferde:\n${horses.map(h => `- ${h.name} (${h.breed || "k.A."}, ${h.age || "?"} J.)${h.notes ? ` – ${h.notes}` : ""}`).join("\n")}`
+      : "";
+
+    const knowledgeCtx = recentKnowledge?.length
+      ? `\n\nLetzte Wissenseinträge:\n${recentKnowledge.map(k => `[${k.category}] ${k.content.substring(0, 200)}`).join("\n")}`
+      : "";
+
+    const systemPrompt = `Du bist der HuufiApp Assistent – ein freundlicher, kompetenter KI-Berater rund ums Pferd.
+
+${modePrompt}${horsesCtx}${knowledgeCtx}
+
+Wichtige Regeln:
+- Du gibst KEINE medizinischen Diagnosen. Bei gesundheitlichen Problemen empfiehlst du immer einen Tierarzt.
+- Antworte immer auf Deutsch.
+- Halte deine Antworten klar, konkret und hilfreich.
+- Sei empathisch – Pferdebesitzer machen sich oft Sorgen.
+- Wenn du dir nicht sicher bist, sage das ehrlich.`;
+
+    // Log usage
+    await adminClient.from("ai_usage_log").insert({
+      user_id: user.id, tokens_in: 0, tokens_out: 0, model: "gemini-3-flash-preview",
+    });
+
+    // Save user's last message to knowledge_vault for unified history
+    const lastUserMsg = messages?.[messages.length - 1];
+    if (lastUserMsg?.role === "user" && lastUserMsg.content) {
+      await adminClient.from("knowledge_vault").insert({
+        user_id: user.id,
+        content: lastUserMsg.content,
+        category: "chat",
+        source: "text",
+        metadata: { channel: "text-chat" },
       });
     }
 
@@ -80,26 +128,7 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
-        messages: [
-          {
-            role: "system",
-            content: `Du bist der HuufiApp Assistent – ein freundlicher, kompetenter KI-Berater rund ums Pferd.
-
-Deine Aufgaben:
-- Fragen zur Pferdegesundheit, Haltung, Fütterung und Pflege beantworten
-- Notizen zusammenfassen und strukturieren
-- Erinnerungen und Termine vorschlagen
-- Allgemeine Wissensfragen rund ums Pferd beantworten
-
-Wichtige Regeln:
-- Du gibst KEINE medizinischen Diagnosen. Bei gesundheitlichen Problemen empfiehlst du immer einen Tierarzt.
-- Antworte immer auf Deutsch.
-- Halte deine Antworten klar, konkret und hilfreich.
-- Sei empathisch – Pferdebesitzer machen sich oft Sorgen.
-- Wenn du dir nicht sicher bist, sage das ehrlich.`,
-          },
-          ...messages,
-        ],
+        messages: [{ role: "system", content: systemPrompt }, ...messages],
         stream: true,
       }),
     });
@@ -107,21 +136,18 @@ Wichtige Regeln:
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Zu viele Anfragen. Bitte versuche es gleich nochmal." }), {
-          status: 429,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       if (response.status === 402) {
         return new Response(JSON.stringify({ error: "Guthaben aufgebraucht. Bitte Credits aufladen." }), {
-          status: 402,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const t = await response.text();
       console.error("AI gateway error:", response.status, t);
       return new Response(JSON.stringify({ error: "KI-Fehler aufgetreten" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -131,8 +157,7 @@ Wichtige Regeln:
   } catch (e) {
     console.error("chat error:", e);
     return new Response(JSON.stringify({ error: e instanceof Error ? e.message : "Unbekannter Fehler" }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 });
