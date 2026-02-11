@@ -71,9 +71,8 @@ export default function FeedbackSection() {
       loadFeedbacks();
 
       // Notify admin via email (fire and forget)
-      const { data: profile } = await supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle();
       supabase.functions.invoke("notify-admin-feedback", {
-        body: { category, content: content.trim(), userName: profile?.display_name || "Unbekannt" },
+        body: { category, content: content.trim() },
       }).catch(() => {});
     }
     setSending(false);
