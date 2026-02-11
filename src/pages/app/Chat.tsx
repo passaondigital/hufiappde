@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Mic, MicOff, Bot, User, Trash2 } from "lucide-react";
+import { Send, Mic, MicOff, Bot, User, Trash2, MessageSquare, Volume2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import VoiceAgent from "@/components/VoiceAgent";
 
 const getAccessToken = async () => {
   const { data } = await supabase.auth.getSession();
@@ -23,6 +24,7 @@ export default function Chat() {
   const [isLoading, setIsLoading] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
+  const [mode, setMode] = useState<"text" | "voice">("text");
   const recognitionRef = useRef<any>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -129,91 +131,124 @@ export default function Chat() {
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
-      {/* Header */}
-      {messages.length > 0 && (
-        <div className="flex justify-end mb-2">
-          <button onClick={clearChat} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"><Trash2 size={12} /> Chat löschen</button>
-        </div>
-      )}
-
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto space-y-4 pb-4">
-        {messages.length === 0 && (
-          <div className="text-center py-16">
-            <Bot size={40} className="text-primary/30 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-foreground mb-2">HuufiApp Assistent</h3>
-            <p className="text-sm text-muted-foreground max-w-md mx-auto">
-              Frag mich alles rund ums Pferd – Gesundheit, Fütterung, Haltung oder Terminplanung. Keine medizinische Diagnose.
-            </p>
-          </div>
-        )}
-        {messages.map((msg) => (
-          <motion.div key={msg.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
-          >
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === "assistant" ? "bg-primary/10 text-primary" : "bg-secondary text-secondary-foreground"}`}>
-              {msg.role === "assistant" ? <Bot size={16} /> : <User size={16} />}
-            </div>
-            <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${msg.role === "assistant" ? "bg-card border border-border text-foreground rounded-tl-md" : "bg-primary text-primary-foreground rounded-tr-md"}`}>
-              {msg.content}
-            </div>
-          </motion.div>
-        ))}
-        {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
-          <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><Bot size={16} className="text-primary" /></div>
-            <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-card border border-border">
-              <div className="flex gap-1">
-                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" />
-                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0.1s]" />
-                <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0.2s]" />
-              </div>
-            </div>
-          </div>
-        )}
-        <div ref={bottomRef} />
-      </div>
-
-      {/* Input */}
-      <div className="border-t border-border pt-4">
-        <div className="flex items-center gap-2">
+      {/* Mode Toggle */}
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-1 p-1 rounded-xl bg-secondary">
           <button
-            onClick={() => {
-              const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-              if (!SpeechRecognition) { toast.error("Spracherkennung wird von deinem Browser nicht unterstützt."); return; }
-              if (isRecording) { recognitionRef.current?.stop(); setIsRecording(false); return; }
-              const recognition = new SpeechRecognition();
-              recognition.lang = "de-DE";
-              recognition.continuous = false;
-              recognition.interimResults = false;
-              recognitionRef.current = recognition;
-              recognition.onresult = (event: any) => {
-                const transcript = event.results[0][0].transcript;
-                setInput((prev) => (prev ? prev + " " : "") + transcript);
-                setIsRecording(false);
-              };
-              recognition.onerror = () => { setIsRecording(false); toast.error("Spracherkennung fehlgeschlagen"); };
-              recognition.onend = () => setIsRecording(false);
-              recognition.start();
-              setIsRecording(true);
-            }}
-            className={`p-2.5 rounded-lg transition-all ${isRecording ? "bg-destructive text-destructive-foreground animate-pulse" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+            onClick={() => setMode("text")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              mode === "text"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
-            {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
+            <MessageSquare size={14} />
+            Text
           </button>
-          <input value={input} onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder={isRecording ? "Ich höre zu..." : "Schreibe eine Nachricht..."}
-            className="flex-1 px-4 py-2.5 rounded-lg bg-card border border-input text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-          />
-          <button onClick={handleSend} disabled={!input.trim() || isLoading}
-            className="p-2.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+          <button
+            onClick={() => setMode("voice")}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+              mode === "voice"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
           >
-            <Send size={18} />
+            <Volume2 size={14} />
+            Voice
           </button>
         </div>
-        <p className="text-xs text-muted-foreground mt-2 text-center">KI-Assistent · Keine medizinische Beratung</p>
+        {mode === "text" && messages.length > 0 && (
+          <button onClick={clearChat} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"><Trash2 size={12} /> Chat löschen</button>
+        )}
       </div>
+
+      {/* Voice Mode */}
+      {mode === "voice" ? (
+        <div className="flex-1 flex items-center justify-center">
+          <VoiceAgent isOpen onClose={() => setMode("text")} />
+        </div>
+      ) : (
+        <>
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto space-y-4 pb-4">
+            {messages.length === 0 && (
+              <div className="text-center py-16">
+                <Bot size={40} className="text-primary/30 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">HuufiApp Assistent</h3>
+                <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                  Frag mich alles rund ums Pferd – Gesundheit, Fütterung, Haltung oder Terminplanung. Keine medizinische Diagnose.
+                </p>
+              </div>
+            )}
+            {messages.map((msg) => (
+              <motion.div key={msg.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}
+              >
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === "assistant" ? "bg-primary/10 text-primary" : "bg-secondary text-secondary-foreground"}`}>
+                  {msg.role === "assistant" ? <Bot size={16} /> : <User size={16} />}
+                </div>
+                <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${msg.role === "assistant" ? "bg-card border border-border text-foreground rounded-tl-md" : "bg-primary text-primary-foreground rounded-tr-md"}`}>
+                  {msg.content}
+                </div>
+              </motion.div>
+            ))}
+            {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
+              <div className="flex gap-3">
+                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><Bot size={16} className="text-primary" /></div>
+                <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-card border border-border">
+                  <div className="flex gap-1">
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce" />
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0.1s]" />
+                    <span className="w-2 h-2 rounded-full bg-muted-foreground/40 animate-bounce [animation-delay:0.2s]" />
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={bottomRef} />
+          </div>
+
+          {/* Input */}
+          <div className="border-t border-border pt-4">
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => {
+                  const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+                  if (!SpeechRecognition) { toast.error("Spracherkennung wird von deinem Browser nicht unterstützt."); return; }
+                  if (isRecording) { recognitionRef.current?.stop(); setIsRecording(false); return; }
+                  const recognition = new SpeechRecognition();
+                  recognition.lang = "de-DE";
+                  recognition.continuous = false;
+                  recognition.interimResults = false;
+                  recognitionRef.current = recognition;
+                  recognition.onresult = (event: any) => {
+                    const transcript = event.results[0][0].transcript;
+                    setInput((prev) => (prev ? prev + " " : "") + transcript);
+                    setIsRecording(false);
+                  };
+                  recognition.onerror = () => { setIsRecording(false); toast.error("Spracherkennung fehlgeschlagen"); };
+                  recognition.onend = () => setIsRecording(false);
+                  recognition.start();
+                  setIsRecording(true);
+                }}
+                className={`p-2.5 rounded-lg transition-all ${isRecording ? "bg-destructive text-destructive-foreground animate-pulse" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+              >
+                {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
+              </button>
+              <input value={input} onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+                placeholder={isRecording ? "Ich höre zu..." : "Schreibe eine Nachricht..."}
+                className="flex-1 px-4 py-2.5 rounded-lg bg-card border border-input text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              />
+              <button onClick={handleSend} disabled={!input.trim() || isLoading}
+                className="p-2.5 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                <Send size={18} />
+              </button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 text-center">KI-Assistent · Keine medizinische Beratung</p>
+          </div>
+        </>
+      )}
     </div>
   );
 }
