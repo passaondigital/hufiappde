@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
-import { Plus, Calendar, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Plus, Calendar, X, ChevronLeft, ChevronRight, Download, CalendarPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { generateICS, downloadICS } from "@/utils/calendarExport";
 
 interface Appointment {
   id: string;
@@ -57,6 +58,32 @@ export default function Termine() {
     fetchAppointments();
   };
 
+  const exportToCalendar = (apt: Appointment) => {
+    const ics = generateICS({
+      type: apt.type,
+      date: apt.date,
+      time: apt.time,
+      notes: apt.notes,
+      horseName: apt.horses?.name,
+    });
+    downloadICS(ics, `huufi-${apt.type}-${apt.date}.ics`);
+    toast.success("Termin als .ics exportiert – öffne die Datei, um ihn deinem Kalender hinzuzufügen");
+  };
+
+  const exportAllToCalendar = () => {
+    appointments.forEach((apt) => {
+      const ics = generateICS({
+        type: apt.type,
+        date: apt.date,
+        time: apt.time,
+        notes: apt.notes,
+        horseName: apt.horses?.name,
+      });
+      downloadICS(ics, `huufi-${apt.type}-${apt.date}.ics`);
+    });
+    toast.success(`${appointments.length} Termine exportiert`);
+  };
+
   const formatDate = (d: string) => new Date(d).toLocaleDateString("de-DE", { weekday: "short", day: "numeric", month: "long" });
 
   const typeColors: Record<string, string> = { Hufbearbeitung: "bg-primary", Tierarzt: "bg-accent", Osteopath: "bg-muted-foreground" };
@@ -86,9 +113,14 @@ export default function Termine() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-3">
         <h2 className="text-2xl font-bold text-foreground">Deine Termine</h2>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {appointments.length > 0 && (
+            <button onClick={exportAllToCalendar} className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-secondary text-secondary-foreground text-sm font-medium hover:bg-secondary/80 transition-colors">
+              <CalendarPlus size={16} /> Alle exportieren
+            </button>
+          )}
           <div className="flex bg-secondary/30 rounded-lg p-0.5">
             <button onClick={() => setViewMode("calendar")}
               className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${viewMode === "calendar" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground"}`}>
@@ -188,6 +220,10 @@ export default function Termine() {
                   <p className="text-xs text-muted-foreground">{apt.horses?.name || "–"} · {formatDate(apt.date)}{apt.time ? ` · ${apt.time.slice(0, 5)}` : ""}</p>
                   {apt.notes && <p className="text-xs text-muted-foreground mt-1 truncate">{apt.notes}</p>}
                 </div>
+                <button onClick={(e) => { e.stopPropagation(); exportToCalendar(apt); }}
+                  className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors" title="Zum Kalender hinzufügen">
+                  <Download size={16} />
+                </button>
               </motion.div>
             ))}
           </div>

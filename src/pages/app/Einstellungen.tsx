@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { PushNotificationToggle } from "@/hooks/usePushNotifications";
 import FeedbackSection from "@/components/FeedbackSection";
+import UserModeSelector from "@/components/UserModeSelector";
 
 export default function Einstellungen() {
   const { user } = useAuth();
@@ -57,6 +58,10 @@ export default function Einstellungen() {
         <Settings size={24} className="text-primary" />
         <h2 className="text-2xl font-bold text-foreground">Einstellungen</h2>
       </div>
+      {/* User Mode */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }} className="p-5 rounded-xl bg-card border border-border">
+        <UserModeSelector />
+      </motion.div>
 
       {/* Profile */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="p-5 rounded-xl bg-card border border-border space-y-4">
