@@ -29,16 +29,21 @@ export default function InstallPrompt() {
 
   useEffect(() => {
     if (!user) return;
-    // Check if user has already dismissed or installed
-    const dismissed = localStorage.getItem(`huufi_install_dismissed_${user.id}`);
-    if (dismissed) return;
 
     // Check if already in standalone mode (installed)
     const isStandalone = window.matchMedia("(display-mode: standalone)").matches
       || (window.navigator as any).standalone === true;
     if (isStandalone) return;
 
-    // Show prompt after a short delay on first login
+    // Check if user has dismissed - allow re-prompt after 7 days
+    const dismissedAt = localStorage.getItem(`huufi_install_dismissed_${user.id}`);
+    if (dismissedAt) {
+      const dismissedDate = new Date(dismissedAt).getTime();
+      const sevenDays = 7 * 24 * 60 * 60 * 1000;
+      if (Date.now() - dismissedDate < sevenDays) return;
+    }
+
+    // Show prompt after a short delay
     const timer = setTimeout(() => setShow(true), 2000);
     return () => clearTimeout(timer);
   }, [user]);
@@ -67,7 +72,7 @@ export default function InstallPrompt() {
   const handleDismiss = () => {
     setShow(false);
     if (user) {
-      localStorage.setItem(`huufi_install_dismissed_${user.id}`, "true");
+      localStorage.setItem(`huufi_install_dismissed_${user.id}`, new Date().toISOString());
     }
   };
 
