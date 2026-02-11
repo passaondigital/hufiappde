@@ -2,3 +2,9 @@ project_id = "oortmejcefbiewaceccc"
 
 [functions.chat]
 verify_jwt = false
+
+[functions.voice-token]
+verify_jwt = false
+
+[functions.voice-route]
+verify_jwt = false
