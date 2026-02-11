@@ -46,7 +46,7 @@ export default function AdminDashboard() {
 
   const fetchData = async () => {
     const [profilesRes, rolesRes, subsRes, horsesRes, aiLogsRes] = await Promise.all([
-      supabase.from("profiles").select("*"),
+      supabase.from("profiles").select("user_id, display_name, created_at, updated_at, onboarding_completed, user_type, location_name"),
       supabase.from("user_roles").select("*"),
       supabase.from("user_subscriptions").select("*"),
       supabase.from("horses").select("id"),

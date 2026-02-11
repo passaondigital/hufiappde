@@ -66,7 +66,7 @@ export default function MvpDashboard() {
 
   const fetchMvpData = async () => {
     const [profilesRes, chatRes, horsesRes, notesRes, aptsRes, feedbackRes, questionsRes] = await Promise.all([
-      supabase.from("profiles").select("*"),
+      supabase.from("profiles").select("user_id, display_name, created_at, updated_at, onboarding_completed, user_type, location_name"),
       supabase.from("chat_messages").select("user_id, created_at").eq("role", "user"),
       supabase.from("horses").select("user_id, id"),
       supabase.from("notes").select("user_id, id, created_at"),
