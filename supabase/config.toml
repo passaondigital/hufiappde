@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.voice-route]
 verify_jwt = false
+
+[functions.trichter-route]
+verify_jwt = false

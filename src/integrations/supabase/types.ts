@@ -554,6 +554,39 @@ export type Database = {
         }
         Relationships: []
       }
+      projects_master: {
+        Row: {
+          assets_list: Json
+          created_at: string
+          id: string
+          last_logic_update: string
+          name: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          assets_list?: Json
+          created_at?: string
+          id?: string
+          last_logic_update?: string
+          name: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          assets_list?: Json
+          created_at?: string
+          id?: string
+          last_logic_update?: string
+          name?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -680,6 +713,42 @@ export type Database = {
           rating?: number | null
           status?: string
           subcategory?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_learning_profile: {
+        Row: {
+          created_at: string
+          favorite_topics: string[] | null
+          id: string
+          input_count: number
+          last_input_at: string | null
+          patterns: Json
+          preferences: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          favorite_topics?: string[] | null
+          id?: string
+          input_count?: number
+          last_input_at?: string | null
+          patterns?: Json
+          preferences?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          favorite_topics?: string[] | null
+          id?: string
+          input_count?: number
+          last_input_at?: string | null
+          patterns?: Json
+          preferences?: Json
           updated_at?: string
           user_id?: string
         }
