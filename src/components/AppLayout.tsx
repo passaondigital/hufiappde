@@ -1,10 +1,10 @@
 import { useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Heart, MessageCircle, FileText, Calendar, Users,
-  Menu, X, ChevronLeft, LogOut, Shield, Mic, Plus, PenLine,
-  FolderLock, Settings, Link2, MessageSquarePlus,
+  Menu, X, ChevronLeft, LogOut, Shield, Mic, Plus, PenLine, ArrowLeft,
+  FolderLock, Settings, Link2, MessageSquarePlus, Brain,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -20,18 +20,20 @@ const navItems = [
   { path: "/app/termine", icon: Calendar, label: "Termine" },
   { path: "/app/kunden", icon: Users, label: "Kunden" },
   { path: "/app/tresor", icon: FolderLock, label: "Tresor" },
-  { path: "/app/connect", icon: Link2, label: "Connect" },
+  { path: "/app/wissen", icon: Brain, label: "Wissen" },
   { path: "/app/feedback", icon: MessageSquarePlus, label: "Feedback" },
   { path: "/app/einstellungen", icon: Settings, label: "Einstellungen" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
+  const isSubPage = location.pathname !== "/app";
 
   const allNavItems = isAdmin
     ? [...navItems, { path: "/app/admin", icon: Shield, label: "Admin" }]
@@ -91,6 +93,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <main className="flex-1 flex flex-col overflow-hidden">
         <header className="flex items-center gap-4 px-6 py-4 border-b border-border bg-background/80 backdrop-blur-sm">
           <button onClick={() => setMobileOpen(true)} className="md:hidden text-foreground/60 hover:text-foreground"><Menu size={22} /></button>
+          {isSubPage && (
+            <button onClick={() => navigate(-1)} className="hidden md:flex p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
+              <ArrowLeft size={18} />
+            </button>
+          )}
           <h1 className="text-lg font-semibold" style={{ fontFamily: "Georgia, serif" }}>
             {allNavItems.find((n) => n.path === "/app" ? location.pathname === "/app" : location.pathname.startsWith(n.path))?.label || "HuufiApp"}
           </h1>
