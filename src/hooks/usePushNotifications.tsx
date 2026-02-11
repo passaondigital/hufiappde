@@ -23,7 +23,7 @@ export function usePushNotifications() {
     try {
       const reg = await navigator.serviceWorker.getRegistration();
       if (reg) {
-        const sub = await reg.pushManager.getSubscription();
+        const sub = await (reg as any).pushManager.getSubscription();
         setIsSubscribed(!!sub);
       }
     } catch {}
@@ -46,7 +46,7 @@ export function usePushNotifications() {
       }
 
       // Subscribe to push (no VAPID key needed for local notifications)
-      const sub = await reg.pushManager.subscribe({
+      const sub = await (reg as any).pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: undefined,
       });
@@ -81,7 +81,7 @@ export function usePushNotifications() {
     try {
       const reg = await navigator.serviceWorker.getRegistration();
       if (reg) {
-        const sub = await reg.pushManager.getSubscription();
+        const sub = await (reg as any).pushManager.getSubscription();
         if (sub) await sub.unsubscribe();
       }
       if (user) {

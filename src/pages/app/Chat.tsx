@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Mic, Bot, User, Trash2 } from "lucide-react";
+import { Send, Mic, MicOff, Bot, User, Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -22,6 +22,8 @@ export default function Chat() {
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [loadingHistory, setLoadingHistory] = useState(true);
+  const [isRecording, setIsRecording] = useState(false);
+  const recognitionRef = useRef<any>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -175,9 +177,33 @@ export default function Chat() {
       {/* Input */}
       <div className="border-t border-border pt-4">
         <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+              if (!SpeechRecognition) { toast.error("Spracherkennung wird von deinem Browser nicht unterstützt."); return; }
+              if (isRecording) { recognitionRef.current?.stop(); setIsRecording(false); return; }
+              const recognition = new SpeechRecognition();
+              recognition.lang = "de-DE";
+              recognition.continuous = false;
+              recognition.interimResults = false;
+              recognitionRef.current = recognition;
+              recognition.onresult = (event: any) => {
+                const transcript = event.results[0][0].transcript;
+                setInput((prev) => (prev ? prev + " " : "") + transcript);
+                setIsRecording(false);
+              };
+              recognition.onerror = () => { setIsRecording(false); toast.error("Spracherkennung fehlgeschlagen"); };
+              recognition.onend = () => setIsRecording(false);
+              recognition.start();
+              setIsRecording(true);
+            }}
+            className={`p-2.5 rounded-lg transition-all ${isRecording ? "bg-destructive text-destructive-foreground animate-pulse" : "bg-secondary text-secondary-foreground hover:bg-secondary/80"}`}
+          >
+            {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
+          </button>
           <input value={input} onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
-            placeholder="Schreibe eine Nachricht..."
+            placeholder={isRecording ? "Ich höre zu..." : "Schreibe eine Nachricht..."}
             className="flex-1 px-4 py-2.5 rounded-lg bg-card border border-input text-foreground placeholder:text-muted-foreground text-sm focus:outline-none focus:ring-2 focus:ring-ring"
           />
           <button onClick={handleSend} disabled={!input.trim() || isLoading}
