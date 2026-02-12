@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import OnboardingTour from "@/components/OnboardingTour";
 import WeatherWidget from "@/components/WeatherWidget";
 import MvpQuestionPrompt from "@/components/MvpQuestionPrompt";
+import StallmodusWidget from "@/components/StallmodusWidget";
 
 type UserMode = "personal" | "horse" | "business" | null;
 
@@ -123,6 +124,7 @@ export default function Dashboard() {
       </div>
 
       <WeatherWidget />
+      <StallmodusWidget />
 
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
