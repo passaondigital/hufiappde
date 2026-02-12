@@ -11,3 +11,9 @@ verify_jwt = false
 
 [functions.trichter-route]
 verify_jwt = false
+
+[functions.stallmodus]
+verify_jwt = false
+
+[functions.elevenlabs-tts]
+verify_jwt = false
