@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Send, Mic, MicOff, Bot, User, Trash2, MessageSquare, Volume2 } from "lucide-react";
+import { Send, Mic, MicOff, Bot, User, Trash2, MessageSquare, Volume2, VolumeX, Sparkles, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -25,6 +25,9 @@ export default function Chat() {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [isRecording, setIsRecording] = useState(false);
   const [mode, setMode] = useState<"text" | "voice">("text");
+  const [ttsEnabled, setTtsEnabled] = useState(false);
+  const [ttsLoading, setTtsLoading] = useState(false);
+  const [modelTier, setModelTier] = useState<"free" | "premium">("free");
   const recognitionRef = useRef<any>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -32,29 +35,57 @@ export default function Chat() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Load chat history
+  // Load chat history + subscription tier
   useEffect(() => {
     if (!user) return;
-    supabase.from("chat_messages").select("*").eq("user_id", user.id).order("created_at").then(({ data }) => {
-      if (data && data.length > 0) {
-        setMessages(data.map((m) => ({ id: m.id, role: m.role as "user" | "assistant", content: m.content })));
+    Promise.all([
+      supabase.from("chat_messages").select("*").eq("user_id", user.id).order("created_at"),
+      supabase.from("user_subscriptions").select("plan").eq("user_id", user.id).eq("is_active", true).maybeSingle(),
+    ]).then(([{ data: msgs }, { data: sub }]) => {
+      if (msgs && msgs.length > 0) {
+        setMessages(msgs.map((m) => ({ id: m.id, role: m.role as "user" | "assistant", content: m.content })));
       }
+      setModelTier(sub?.plan === "premium" ? "premium" : "free");
       setLoadingHistory(false);
     });
   }, [user]);
+
+  const speakText = async (text: string) => {
+    if (!ttsEnabled) return;
+    setTtsLoading(true);
+    try {
+      const token = await getAccessToken();
+      const resp = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/elevenlabs-tts`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({ text: text.substring(0, 500) }),
+      });
+      if (!resp.ok) throw new Error("TTS fehlgeschlagen");
+      const { audio } = await resp.json();
+      if (audio) {
+        const audioEl = new Audio(`data:audio/mpeg;base64,${audio}`);
+        audioEl.play();
+      }
+    } catch {
+      // TTS is optional, silently fail
+    } finally {
+      setTtsLoading(false);
+    }
+  };
 
   const handleSend = async () => {
     if (!input.trim() || !user || isLoading) return;
     const userContent = input.trim();
     setInput("");
 
-    // Save user message
     const { data: savedMsg } = await supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content: userContent }).select().single();
     const userMsg: Message = { id: savedMsg?.id || Date.now().toString(), role: "user", content: userContent };
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
 
-    // Stream AI response
     const allMessages = [...messages, userMsg].map((m) => ({ role: m.role, content: m.content }));
     let assistantContent = "";
     const assistantId = crypto.randomUUID();
@@ -74,6 +105,10 @@ export default function Chat() {
         const err = await resp.json().catch(() => ({}));
         throw new Error(err.error || "Fehler bei der KI-Anfrage");
       }
+
+      // Read model tier from response headers
+      const tier = resp.headers.get("X-Model-Tier");
+      if (tier === "premium" || tier === "free") setModelTier(tier);
 
       const reader = resp.body!.getReader();
       const decoder = new TextDecoder();
@@ -109,9 +144,10 @@ export default function Chat() {
         }
       }
 
-      // Save assistant message
       if (assistantContent) {
         await supabase.from("chat_messages").insert({ user_id: user.id, role: "assistant", content: assistantContent });
+        // Optional TTS
+        speakText(assistantContent);
       }
     } catch (e: any) {
       toast.error(e.message || "KI-Fehler");
@@ -131,35 +167,70 @@ export default function Chat() {
 
   return (
     <div className="max-w-3xl mx-auto flex flex-col h-[calc(100vh-8rem)]">
-      {/* Mode Toggle */}
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-1 p-1 rounded-xl bg-secondary">
-          <button
-            onClick={() => setMode("text")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              mode === "text"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <MessageSquare size={14} />
-            Text
-          </button>
-          <button
-            onClick={() => setMode("voice")}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-              mode === "voice"
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            <Volume2 size={14} />
-            Voice
-          </button>
+      {/* Header controls */}
+      <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+        <div className="flex items-center gap-2">
+          {/* Mode Toggle */}
+          <div className="flex items-center gap-1 p-1 rounded-xl bg-secondary">
+            <button
+              onClick={() => setMode("text")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                mode === "text"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <MessageSquare size={14} />
+              Text
+            </button>
+            <button
+              onClick={() => setMode("voice")}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                mode === "voice"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Volume2 size={14} />
+              Voice
+            </button>
+          </div>
+
+          {/* Model tier badge */}
+          <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium ${
+            modelTier === "premium"
+              ? "bg-primary/10 text-primary"
+              : "bg-secondary text-muted-foreground"
+          }`}>
+            {modelTier === "premium" ? <Sparkles size={10} /> : <Zap size={10} />}
+            {modelTier === "premium" ? "Premium" : "Free"}
+          </div>
         </div>
-        {mode === "text" && messages.length > 0 && (
-          <button onClick={clearChat} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"><Trash2 size={12} /> Chat löschen</button>
-        )}
+
+        <div className="flex items-center gap-2">
+          {/* TTS Toggle */}
+          {mode === "text" && (
+            <button
+              onClick={() => {
+                setTtsEnabled(!ttsEnabled);
+                toast.success(ttsEnabled ? "Sprachausgabe deaktiviert" : "Sprachausgabe aktiviert");
+              }}
+              className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                ttsEnabled
+                  ? "bg-primary/10 text-primary"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {ttsEnabled ? <Volume2 size={12} /> : <VolumeX size={12} />}
+              {ttsEnabled ? "TTS an" : "TTS aus"}
+            </button>
+          )}
+          {mode === "text" && messages.length > 0 && (
+            <button onClick={clearChat} className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1">
+              <Trash2 size={12} /> Löschen
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Voice Mode */}
@@ -176,7 +247,10 @@ export default function Chat() {
                 <Bot size={40} className="text-primary/30 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">HuufiApp Assistent</h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  Frag mich alles rund ums Pferd – Gesundheit, Fütterung, Haltung oder Terminplanung. Keine medizinische Diagnose.
+                  Frag mich alles rund ums Pferd – Gesundheit, Fütterung, Haltung oder Terminplanung.
+                </p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Modell: {modelTier === "premium" ? "Premium (Gemini 3 Flash)" : "Free (Gemini 2.5 Flash Lite)"}
                 </p>
               </div>
             )}
@@ -213,7 +287,7 @@ export default function Chat() {
               <button
                 onClick={() => {
                   const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-                  if (!SpeechRecognition) { toast.error("Spracherkennung wird von deinem Browser nicht unterstützt."); return; }
+                  if (!SpeechRecognition) { toast.error("Spracherkennung nicht unterstützt."); return; }
                   if (isRecording) { recognitionRef.current?.stop(); setIsRecording(false); return; }
                   const recognition = new SpeechRecognition();
                   recognition.lang = "de-DE";
@@ -245,7 +319,10 @@ export default function Chat() {
                 <Send size={18} />
               </button>
             </div>
-            <p className="text-xs text-muted-foreground mt-2 text-center">KI-Assistent · Keine medizinische Beratung</p>
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              {modelTier === "premium" ? "✨ Premium-KI" : "⚡ Free-KI"} · Keine medizinische Beratung
+              {ttsEnabled && " · 🔊 Sprachausgabe aktiv"}
+            </p>
           </div>
         </>
       )}

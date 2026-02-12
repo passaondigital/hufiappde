@@ -7,6 +7,10 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Model tiers
+const FREE_MODEL = "google/gemini-2.5-flash-lite";
+const PREMIUM_MODEL = "google/gemini-3-flash-preview";
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -53,16 +57,19 @@ serve(async (req) => {
       });
     }
 
-    // Load user context: profile, role, horses, recent knowledge
-    const [{ data: profile }, { data: roleData }, { data: horses }, { data: recentKnowledge }] = await Promise.all([
+    // Load user context: profile, role, horses, recent knowledge, subscription
+    const [{ data: profile }, { data: roleData }, { data: horses }, { data: recentKnowledge }, { data: subscription }] = await Promise.all([
       adminClient.from("profiles").select("user_type, display_name").eq("user_id", user.id).maybeSingle(),
       adminClient.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle(),
       adminClient.from("horses").select("id, name, breed, age, notes").eq("user_id", user.id).limit(10),
       adminClient.from("knowledge_vault").select("content, category, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
+      adminClient.from("user_subscriptions").select("plan, is_active").eq("user_id", user.id).eq("is_active", true).maybeSingle(),
     ]);
 
     const isAdmin = !!roleData;
     const userMode = profile?.user_type || "personal";
+    const isPremium = isAdmin || subscription?.plan === "premium";
+    const selectedModel = isPremium ? PREMIUM_MODEL : FREE_MODEL;
 
     // Build mode-dependent system prompt
     let modePrompt = "";
@@ -103,12 +110,12 @@ Wichtige Regeln:
 - Sei empathisch – Pferdebesitzer machen sich oft Sorgen.
 - Wenn du dir nicht sicher bist, sage das ehrlich.`;
 
-    // Log usage
+    // Log usage with model info
     await adminClient.from("ai_usage_log").insert({
-      user_id: user.id, tokens_in: 0, tokens_out: 0, model: "gemini-3-flash-preview",
+      user_id: user.id, tokens_in: 0, tokens_out: 0, model: selectedModel,
     });
 
-    // Save user's last message to knowledge_vault for unified history
+    // Save user's last message to knowledge_vault
     const lastUserMsg = messages?.[messages.length - 1];
     if (lastUserMsg?.role === "user" && lastUserMsg.content) {
       await adminClient.from("knowledge_vault").insert({
@@ -127,7 +134,7 @@ Wichtige Regeln:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "google/gemini-3-flash-preview",
+        model: selectedModel,
         messages: [{ role: "system", content: systemPrompt }, ...messages],
         stream: true,
       }),
@@ -151,8 +158,14 @@ Wichtige Regeln:
       });
     }
 
+    // Return stream with model info header
     return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "X-Model-Tier": isPremium ? "premium" : "free",
+        "X-Model-Name": selectedModel,
+      },
     });
   } catch (e) {
     console.error("chat error:", e);
