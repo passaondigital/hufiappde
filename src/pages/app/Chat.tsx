@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import ReactMarkdown from "react-markdown";
 import VoiceAgent from "@/components/VoiceAgent";
 
 const getAccessToken = async () => {
@@ -27,7 +28,7 @@ export default function Chat() {
   const [mode, setMode] = useState<"text" | "voice">("text");
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const [ttsLoading, setTtsLoading] = useState(false);
-  const [modelTier, setModelTier] = useState<"free" | "premium">("free");
+  const [accountType, setAccountType] = useState<"free" | "pro">("free");
   const recognitionRef = useRef<any>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -35,7 +36,6 @@ export default function Chat() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  // Load chat history + subscription tier
   useEffect(() => {
     if (!user) return;
     Promise.all([
@@ -45,7 +45,7 @@ export default function Chat() {
       if (msgs && msgs.length > 0) {
         setMessages(msgs.map((m) => ({ id: m.id, role: m.role as "user" | "assistant", content: m.content })));
       }
-      setModelTier(sub?.plan === "premium" ? "premium" : "free");
+      setAccountType(sub?.plan === "premium" ? "pro" : "free");
       setLoadingHistory(false);
     });
   }, [user]);
@@ -70,7 +70,7 @@ export default function Chat() {
         audioEl.play();
       }
     } catch {
-      // TTS is optional, silently fail
+      // TTS is optional
     } finally {
       setTtsLoading(false);
     }
@@ -87,8 +87,6 @@ export default function Chat() {
     setIsLoading(true);
 
     const allMessages = [...messages, userMsg].map((m) => ({ role: m.role, content: m.content }));
-    let assistantContent = "";
-    const assistantId = crypto.randomUUID();
 
     try {
       const token = await getAccessToken();
@@ -106,49 +104,15 @@ export default function Chat() {
         throw new Error(err.error || "Fehler bei der KI-Anfrage");
       }
 
-      // Read model tier from response headers
-      const tier = resp.headers.get("X-Model-Tier");
-      if (tier === "premium" || tier === "free") setModelTier(tier);
+      const data = await resp.json();
+      const reply = data.reply || "Keine Antwort erhalten.";
+      if (data.account_type) setAccountType(data.account_type);
 
-      const reader = resp.body!.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
+      const assistantMsg: Message = { id: crypto.randomUUID(), role: "assistant", content: reply };
+      setMessages((prev) => [...prev, assistantMsg]);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-
-        let newlineIndex: number;
-        while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
-          let line = buffer.slice(0, newlineIndex);
-          buffer = buffer.slice(newlineIndex + 1);
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (!line.startsWith("data: ") || line.trim() === "" || line.startsWith(":")) continue;
-          const jsonStr = line.slice(6).trim();
-          if (jsonStr === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              assistantContent += content;
-              setMessages((prev) => {
-                const last = prev[prev.length - 1];
-                if (last?.id === assistantId) {
-                  return prev.map((m, i) => i === prev.length - 1 ? { ...m, content: assistantContent } : m);
-                }
-                return [...prev, { id: assistantId, role: "assistant", content: assistantContent }];
-              });
-            }
-          } catch { /* partial json */ }
-        }
-      }
-
-      if (assistantContent) {
-        await supabase.from("chat_messages").insert({ user_id: user.id, role: "assistant", content: assistantContent });
-        // Optional TTS
-        speakText(assistantContent);
-      }
+      await supabase.from("chat_messages").insert({ user_id: user.id, role: "assistant", content: reply });
+      speakText(reply);
     } catch (e: any) {
       toast.error(e.message || "KI-Fehler");
     } finally {
@@ -170,7 +134,6 @@ export default function Chat() {
       {/* Header controls */}
       <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
         <div className="flex items-center gap-2">
-          {/* Mode Toggle */}
           <div className="flex items-center gap-1 p-1 rounded-xl bg-secondary">
             <button
               onClick={() => setMode("text")}
@@ -196,19 +159,18 @@ export default function Chat() {
             </button>
           </div>
 
-          {/* Model tier badge */}
+          {/* Account type badge */}
           <div className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium ${
-            modelTier === "premium"
+            accountType === "pro"
               ? "bg-primary/10 text-primary"
               : "bg-secondary text-muted-foreground"
           }`}>
-            {modelTier === "premium" ? <Sparkles size={10} /> : <Zap size={10} />}
-            {modelTier === "premium" ? "Premium" : "Free"}
+            {accountType === "pro" ? <Sparkles size={10} /> : <Zap size={10} />}
+            {accountType === "pro" ? "Pro" : "Free"}
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-          {/* TTS Toggle */}
           {mode === "text" && (
             <button
               onClick={() => {
@@ -245,12 +207,12 @@ export default function Chat() {
             {messages.length === 0 && (
               <div className="text-center py-16">
                 <Bot size={40} className="text-primary/30 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">HuufiApp Assistent</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-2">HufiAi Assistent</h3>
                 <p className="text-sm text-muted-foreground max-w-md mx-auto">
                   Frag mich alles rund ums Pferd – Gesundheit, Fütterung, Haltung oder Terminplanung.
                 </p>
                 <p className="text-xs text-muted-foreground mt-2">
-                  Modell: {modelTier === "premium" ? "Premium (Gemini 3 Flash)" : "Free (Gemini 2.5 Flash Lite)"}
+                  Konto: {accountType === "pro" ? "✨ Pro" : "⚡ Free"}
                 </p>
               </div>
             )}
@@ -261,12 +223,18 @@ export default function Chat() {
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${msg.role === "assistant" ? "bg-primary/10 text-primary" : "bg-secondary text-secondary-foreground"}`}>
                   {msg.role === "assistant" ? <Bot size={16} /> : <User size={16} />}
                 </div>
-                <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed whitespace-pre-wrap ${msg.role === "assistant" ? "bg-card border border-border text-foreground rounded-tl-md" : "bg-primary text-primary-foreground rounded-tr-md"}`}>
-                  {msg.content}
+                <div className={`max-w-[75%] px-4 py-3 rounded-2xl text-sm leading-relaxed ${msg.role === "assistant" ? "bg-card border border-border text-foreground rounded-tl-md" : "bg-primary text-primary-foreground rounded-tr-md"}`}>
+                  {msg.role === "assistant" ? (
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                      <ReactMarkdown>{msg.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <span className="whitespace-pre-wrap">{msg.content}</span>
+                  )}
                 </div>
               </motion.div>
             ))}
-            {isLoading && messages[messages.length - 1]?.role !== "assistant" && (
+            {isLoading && (
               <div className="flex gap-3">
                 <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center"><Bot size={16} className="text-primary" /></div>
                 <div className="px-4 py-3 rounded-2xl rounded-tl-md bg-card border border-border">
@@ -320,7 +288,7 @@ export default function Chat() {
               </button>
             </div>
             <p className="text-xs text-muted-foreground mt-2 text-center">
-              {modelTier === "premium" ? "✨ Premium-KI" : "⚡ Free-KI"} · Keine medizinische Beratung
+              {accountType === "pro" ? "✨ Pro" : "⚡ Free"} · Powered by HufiAi
               {ttsEnabled && " · 🔊 Sprachausgabe aktiv"}
             </p>
           </div>

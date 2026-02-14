@@ -7,17 +7,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Model tiers
-const FREE_MODEL = "google/gemini-2.5-flash-lite";
-const PREMIUM_MODEL = "google/gemini-3-flash-preview";
+const N8N_WEBHOOK_URL = "https://verteiler.passaon.com/webhook/hufiai-chat";
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const { messages } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     const authHeader = req.headers.get("authorization") || "";
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -57,115 +53,72 @@ serve(async (req) => {
       });
     }
 
-    // Load user context: profile, role, horses, recent knowledge, subscription
-    const [{ data: profile }, { data: roleData }, { data: horses }, { data: recentKnowledge }, { data: subscription }] = await Promise.all([
-      adminClient.from("profiles").select("user_type, display_name").eq("user_id", user.id).maybeSingle(),
-      adminClient.from("user_roles").select("role").eq("user_id", user.id).eq("role", "admin").maybeSingle(),
-      adminClient.from("horses").select("id, name, breed, age, notes").eq("user_id", user.id).limit(10),
-      adminClient.from("knowledge_vault").select("content, category, created_at").eq("user_id", user.id).order("created_at", { ascending: false }).limit(5),
-      adminClient.from("user_subscriptions").select("plan, is_active").eq("user_id", user.id).eq("is_active", true).maybeSingle(),
-    ]);
+    // Get subscription plan
+    const { data: subscription } = await adminClient
+      .from("user_subscriptions")
+      .select("plan")
+      .eq("user_id", user.id)
+      .eq("is_active", true)
+      .maybeSingle();
 
-    const isAdmin = !!roleData;
-    const userMode = profile?.user_type || "personal";
-    const isPremium = isAdmin || subscription?.plan === "premium";
-    const selectedModel = isPremium ? PREMIUM_MODEL : FREE_MODEL;
+    const accountType = subscription?.plan === "premium" ? "pro" : "free";
 
-    // Build mode-dependent system prompt
-    let modePrompt = "";
-    if (isAdmin) {
-      const { data: strategies } = await adminClient.from("business_strategies")
-        .select("content, category, status").eq("user_id", user.id)
-        .order("created_at", { ascending: false }).limit(5);
-
-      modePrompt = `Du sprichst mit ${profile?.display_name || "Pascal"}, dem Admin und Gründer von HuufiApp.
-Modus: ADMIN – Vollzugriff auf Knowledge Vault, Business-Strategien und alle Pferdedaten.
-Du bist sein persönlicher Strategie- und Wissensassistent.
-
-Letzte Strategien: ${strategies?.map(s => `[${s.category}/${s.status}] ${s.content}`).join("\n") || "Keine"}`;
-    } else if (userMode === "business") {
-      modePrompt = `Du sprichst mit ${profile?.display_name || "einem Profi"}.
-Modus: BUSINESS – Professioneller Assistent für Kundenmanagement, Terminplanung und Hufpflege.`;
-    } else {
-      modePrompt = `Du sprichst mit ${profile?.display_name || "einem Pferdebesitzer"}.
-Modus: PERSÖNLICH – Empathischer Begleiter für Pferdegesundheit und -pflege.`;
-    }
-
-    const horsesCtx = horses?.length
-      ? `\n\nPferde:\n${horses.map(h => `- ${h.name} (${h.breed || "k.A."}, ${h.age || "?"} J.)${h.notes ? ` – ${h.notes}` : ""}`).join("\n")}`
-      : "";
-
-    const knowledgeCtx = recentKnowledge?.length
-      ? `\n\nLetzte Wissenseinträge:\n${recentKnowledge.map(k => `[${k.category}] ${k.content.substring(0, 200)}`).join("\n")}`
-      : "";
-
-    const systemPrompt = `Du bist der HuufiApp Assistent – ein freundlicher, kompetenter KI-Berater rund ums Pferd.
-
-${modePrompt}${horsesCtx}${knowledgeCtx}
-
-Wichtige Regeln:
-- Du gibst KEINE medizinischen Diagnosen. Bei gesundheitlichen Problemen empfiehlst du immer einen Tierarzt.
-- Antworte immer auf Deutsch.
-- Halte deine Antworten klar, konkret und hilfreich.
-- Sei empathisch – Pferdebesitzer machen sich oft Sorgen.
-- Wenn du dir nicht sicher bist, sage das ehrlich.`;
-
-    // Log usage with model info
-    await adminClient.from("ai_usage_log").insert({
-      user_id: user.id, tokens_in: 0, tokens_out: 0, model: selectedModel,
-    });
-
-    // Save user's last message to knowledge_vault
+    // Get the last user message
     const lastUserMsg = messages?.[messages.length - 1];
-    if (lastUserMsg?.role === "user" && lastUserMsg.content) {
+    const messageText = lastUserMsg?.content || "";
+
+    // Save to knowledge_vault
+    if (lastUserMsg?.role === "user" && messageText) {
       await adminClient.from("knowledge_vault").insert({
         user_id: user.id,
-        content: lastUserMsg.content,
+        content: messageText,
         category: "chat",
         source: "text",
         metadata: { channel: "text-chat" },
       });
     }
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    // Log usage
+    await adminClient.from("ai_usage_log").insert({
+      user_id: user.id, tokens_in: 0, tokens_out: 0, model: "n8n-hufiai",
+    });
+
+    // Forward to n8n webhook
+    const n8nResponse = await fetch(N8N_WEBHOOK_URL, {
       method: "POST",
-      headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        model: selectedModel,
-        messages: [{ role: "system", content: systemPrompt }, ...messages],
-        stream: true,
+        message: messageText,
+        user_id: user.id,
+        account_type: accountType,
       }),
     });
 
-    if (!response.ok) {
-      if (response.status === 429) {
-        return new Response(JSON.stringify({ error: "Zu viele Anfragen. Bitte versuche es gleich nochmal." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Guthaben aufgebraucht. Bitte Credits aufladen." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      return new Response(JSON.stringify({ error: "KI-Fehler aufgetreten" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    if (!n8nResponse.ok) {
+      const errText = await n8nResponse.text();
+      console.error("n8n webhook error:", n8nResponse.status, errText);
+      return new Response(JSON.stringify({ error: "KI-Verarbeitung fehlgeschlagen" }), {
+        status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Return stream with model info header
-    return new Response(response.body, {
-      headers: {
-        ...corsHeaders,
-        "Content-Type": "text/event-stream",
-        "X-Model-Tier": isPremium ? "premium" : "free",
-        "X-Model-Name": selectedModel,
-      },
+    // n8n can return text or JSON – handle both
+    const contentType = n8nResponse.headers.get("content-type") || "";
+    let reply = "";
+
+    if (contentType.includes("application/json")) {
+      const data = await n8nResponse.json();
+      // Support various response shapes from n8n
+      reply = data.reply || data.response || data.message || data.output || data.text || JSON.stringify(data);
+    } else {
+      reply = await n8nResponse.text();
+    }
+
+    return new Response(JSON.stringify({
+      reply,
+      account_type: accountType,
+    }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
     console.error("chat error:", e);
