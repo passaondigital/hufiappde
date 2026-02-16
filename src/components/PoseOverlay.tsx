@@ -13,6 +13,7 @@ const SKELETON_CONNECTIONS = [
 interface PoseOverlayProps {
   videoRef: React.RefObject<HTMLVideoElement>;
   isActive: boolean;
+  canvasRef?: React.MutableRefObject<HTMLCanvasElement | null>;
 }
 
 // Generate simulated horse keypoints based on video dimensions
@@ -62,8 +63,9 @@ function generateKeypoints(w: number, h: number, frame: number) {
   ];
 }
 
-export default function PoseOverlay({ videoRef, isActive }: PoseOverlayProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
+export default function PoseOverlay({ videoRef, isActive, canvasRef: externalCanvasRef }: PoseOverlayProps) {
+  const internalCanvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasRef = externalCanvasRef || internalCanvasRef;
   const frameRef = useRef(0);
   const rafRef = useRef<number>();
 
@@ -138,7 +140,10 @@ export default function PoseOverlay({ videoRef, isActive }: PoseOverlayProps) {
 
   return (
     <canvas
-      ref={canvasRef}
+      ref={(el) => {
+        (internalCanvasRef as React.MutableRefObject<HTMLCanvasElement | null>).current = el;
+        if (externalCanvasRef) externalCanvasRef.current = el;
+      }}
       className="absolute inset-0 w-full h-full pointer-events-none"
       style={{ mixBlendMode: "screen" }}
     />

@@ -10,7 +10,13 @@ interface AnalysisResult {
   aiNote: string;
 }
 
-export function exportAnalysisPDF(result: AnalysisResult, lang: string = "de") {
+interface PDFOptions {
+  horseName?: string;
+  ownerName?: string;
+  frameImageData?: string; // base64 data URL
+}
+
+export function exportAnalysisPDF(result: AnalysisResult, lang: string = "de", options: PDFOptions = {}) {
   const isEn = lang.startsWith("en");
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
   const w = doc.internal.pageSize.getWidth();
@@ -34,7 +40,51 @@ export function exportAnalysisPDF(result: AnalysisResult, lang: string = "de") {
   doc.setFontSize(8);
   doc.text(new Date().toLocaleDateString(isEn ? "en-GB" : "de-DE", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }), w - margin, 28, { align: "right" });
 
-  y = 52;
+  y = 46;
+
+  // Horse & Owner info
+  if (options.horseName || options.ownerName) {
+    doc.setFillColor(245, 245, 250);
+    doc.roundedRect(margin, y, w - margin * 2, 18, 3, 3, "F");
+    doc.setDrawColor(220, 220, 230);
+    doc.roundedRect(margin, y, w - margin * 2, 18, 3, 3, "S");
+
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(40, 40, 40);
+
+    if (options.horseName) {
+      doc.text(`🐴  ${isEn ? "Horse" : "Pferd"}: ${options.horseName}`, margin + 5, y + 7);
+    }
+    if (options.ownerName) {
+      doc.text(`👤  ${isEn ? "Owner" : "Besitzer/in"}: ${options.ownerName}`, margin + 5, y + 14);
+    }
+    y += 24;
+  } else {
+    y += 8;
+  }
+
+  // Frame capture image
+  if (options.frameImageData) {
+    doc.setFontSize(11);
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(40, 40, 40);
+    doc.text(isEn ? "Skeleton Overlay Capture" : "Skelett-Overlay Aufnahme", margin, y);
+    y += 5;
+
+    const imgW = w - margin * 2;
+    const imgH = imgW * 0.5625; // 16:9 aspect
+    try {
+      doc.addImage(options.frameImageData, "PNG", margin, y, imgW, imgH);
+      // Border around image
+      doc.setDrawColor(200, 200, 200);
+      doc.rect(margin, y, imgW, imgH);
+      y += imgH + 8;
+    } catch {
+      // If image fails, skip
+      y += 4;
+    }
+  }
 
   // Metrics section
   doc.setTextColor(40, 40, 40);
@@ -52,25 +102,21 @@ export function exportAnalysisPDF(result: AnalysisResult, lang: string = "de") {
   const boxW = (w - margin * 2 - 10) / 3;
   metrics.forEach((m, i) => {
     const bx = margin + i * (boxW + 5);
-    // Box background
     doc.setFillColor(m.warn ? 255 : 245, m.warn ? 240 : 245, m.warn ? 240 : 245);
     doc.roundedRect(bx, y, boxW, 36, 3, 3, "F");
     doc.setDrawColor(m.warn ? 220 : 230, m.warn ? 180 : 230, m.warn ? 180 : 230);
     doc.roundedRect(bx, y, boxW, 36, 3, 3, "S");
 
-    // Label
     doc.setFontSize(8);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(120, 120, 120);
     doc.text(m.label, bx + 5, y + 9);
 
-    // Value
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(m.warn ? 200 : 30, m.warn ? 60 : 30, m.warn ? 60 : 30);
     doc.text(m.value, bx + 5, y + 23);
 
-    // Description
     doc.setFontSize(7);
     doc.setFont("helvetica", "normal");
     doc.setTextColor(100, 100, 100);
@@ -78,6 +124,12 @@ export function exportAnalysisPDF(result: AnalysisResult, lang: string = "de") {
   });
 
   y += 48;
+
+  // Check if we need a new page
+  if (y > 230) {
+    doc.addPage();
+    y = 20;
+  }
 
   // AI Note
   doc.setFillColor(255, 248, 235);
@@ -97,34 +149,26 @@ export function exportAnalysisPDF(result: AnalysisResult, lang: string = "de") {
 
   y += 38;
 
-  // Symmetry gauge visualization
+  // Symmetry gauge
+  const gaugeW = w - margin * 2;
   doc.setFontSize(11);
   doc.setFont("helvetica", "bold");
   doc.setTextColor(40, 40, 40);
   doc.text(isEn ? "Symmetry Analysis" : "Symmetrie-Analyse", margin, y);
   y += 8;
 
-  // Simple bar gauge
-  const gaugeW = w - margin * 2;
-  const gaugeH = 10;
-
-  // Background
   doc.setFillColor(230, 230, 230);
-  doc.roundedRect(margin, y, gaugeW, gaugeH, 2, 2, "F");
-
-  // Fill based on score
+  doc.roundedRect(margin, y, gaugeW, 10, 2, 2, "F");
   const fillW = (result.symmetryScore / 100) * gaugeW;
   const r = result.symmetryScore < 85 ? 220 : 60;
   const g = result.symmetryScore < 85 ? 80 : 180;
   const b = result.symmetryScore < 85 ? 60 : 80;
   doc.setFillColor(r, g, b);
-  doc.roundedRect(margin, y, fillW, gaugeH, 2, 2, "F");
-
+  doc.roundedRect(margin, y, fillW, 10, 2, 2, "F");
   doc.setFontSize(7);
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
   doc.text(`${result.symmetryScore}%`, margin + fillW - 12, y + 7);
-
   y += 16;
 
   // Lameness scale
@@ -151,7 +195,6 @@ export function exportAnalysisPDF(result: AnalysisResult, lang: string = "de") {
   doc.setDrawColor(200, 200, 200);
   doc.line(margin, y, w - margin, y);
   y += 6;
-
   doc.setFontSize(7);
   doc.setFont("helvetica", "italic");
   doc.setTextColor(140, 140, 140);
@@ -161,8 +204,6 @@ export function exportAnalysisPDF(result: AnalysisResult, lang: string = "de") {
   const disclaimerLines = doc.splitTextToSize(disclaimer, w - margin * 2);
   doc.text(disclaimerLines, margin, y);
 
-  y += 14;
-
   // Footer
   doc.setFontSize(7);
   doc.setFont("helvetica", "normal");
@@ -170,7 +211,8 @@ export function exportAnalysisPDF(result: AnalysisResult, lang: string = "de") {
   doc.text("© 2026 HuufiApp · PASSA ON Digital · huufiapp.de", margin, doc.internal.pageSize.getHeight() - 10);
   doc.text(`ID: ${crypto.randomUUID().slice(0, 8).toUpperCase()}`, w - margin, doc.internal.pageSize.getHeight() - 10, { align: "right" });
 
-  // Save
-  const filename = `HuufiApp_${isEn ? "Analysis" : "Analyse"}_${new Date().toISOString().slice(0, 10)}.pdf`;
+  // Filename with horse name
+  const namePart = options.horseName ? `_${options.horseName.replace(/[^a-zA-Z0-9äöüÄÖÜß]/g, "")}` : "";
+  const filename = `HuufiApp_${isEn ? "Analysis" : "Analyse"}${namePart}_${new Date().toISOString().slice(0, 10)}.pdf`;
   doc.save(filename);
 }
