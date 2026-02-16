@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Video, Upload, Play, Pause, AlertTriangle, Activity, Lock, Sparkles, ArrowRight, SkipForward, SkipBack } from "lucide-react";
+import { Video, Upload, Play, Pause, AlertTriangle, Activity, Lock, Sparkles, ArrowRight, SkipForward, SkipBack, FileDown } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import PoseOverlay from "@/components/PoseOverlay";
+import { exportAnalysisPDF } from "@/utils/exportAnalysisPDF";
 
 type AnalysisStatus = "idle" | "loading" | "analyzing" | "done";
 
@@ -246,7 +247,15 @@ export default function VideoAnalyse() {
       {/* Results */}
       {status === "done" && analysisResult && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <h3 className="text-sm font-semibold text-foreground">{t("videoAnalysis.analysisResult")}</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">{t("videoAnalysis.analysisResult")}</h3>
+            <button
+              onClick={() => exportAnalysisPDF(analysisResult, t("language.de") === "Deutsch" ? "de" : "en")}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity"
+            >
+              <FileDown size={14} /> PDF Export
+            </button>
+          </div>
           <div className="grid sm:grid-cols-3 gap-4">
             {[
               { label: t("videoAnalysis.symmetryScore"), value: `${analysisResult.symmetryScore}%`, desc: analysisResult.symmetryDesc, color: analysisResult.symmetryScore < 85 ? "text-destructive" : "text-primary" },
