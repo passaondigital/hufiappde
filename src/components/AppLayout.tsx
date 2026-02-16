@@ -61,7 +61,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       `}>
         <div className="flex items-center gap-3 px-5 py-6 border-b border-sidebar-border">
           <img src={huufiLogo} alt="HuufiApp" className="h-10 w-10 rounded-lg object-contain" />
-          {!collapsed && <span className="text-lg font-bold tracking-tight" style={{ fontFamily: "sans-serif" }}>HuufiApp</span>}
+          {!collapsed && <span className="text-lg font-bold tracking-tight">HuufiApp</span>}
           <button onClick={() => setMobileOpen(false)} className="ml-auto md:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"><X size={20} /></button>
         </div>
 
@@ -100,7 +100,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <ArrowLeft size={18} />
             </button>
           )}
-          <h1 className="text-lg font-semibold" style={{ fontFamily: "Georgia, serif" }}>
+          <h1 className="text-lg font-semibold">
             {allNavItems.find((n) => n.path === "/app" ? location.pathname === "/app" : location.pathname.startsWith(n.path))?.label || "HuufiApp"}
           </h1>
         </header>
