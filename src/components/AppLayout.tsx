@@ -27,7 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Bottom bar items
   const bottomItems = [
     { path: "/app", icon: CalendarDays, label: t("sidebar.dashboard", "Heute") },
-    { path: "__voice__", icon: Mic, label: t("sidebar.assistant", "Assistent") },
+    { path: "/app/chat", icon: Mic, label: t("sidebar.assistant", "Assistent"), isCenter: true },
     { path: "/app/archiv", icon: Archive, label: t("sidebar.archive", "Archiv") },
   ];
 
@@ -114,20 +114,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border safe-bottom">
         <div className="flex items-center justify-around px-6 py-2 max-w-md mx-auto">
           {bottomItems.map((item) => {
-            if (item.path === "__voice__") {
-              return (
-                <button
-                  key="voice"
-                  onClick={() => setVoiceOpen(true)}
-                  className="relative -mt-7 flex items-center justify-center w-16 h-16 rounded-full shadow-lg bg-primary text-primary-foreground hover:scale-105 transition-transform"
-                >
-                  <item.icon size={26} />
-                </button>
-              );
-            }
             const isActive = item.path === "/app"
               ? location.pathname === "/app"
               : location.pathname.startsWith(item.path);
+
+            if ((item as any).isCenter) {
+              return (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  className="relative -mt-7 flex items-center justify-center w-16 h-16 rounded-full shadow-lg bg-primary text-primary-foreground hover:scale-105 transition-transform"
+                >
+                  <item.icon size={26} />
+                </Link>
+              );
+            }
+
             return (
               <Link
                 key={item.path}
