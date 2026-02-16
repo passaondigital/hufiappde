@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { MessageCircle, Heart, Calendar, FileText, Mic, Shield, ArrowRight, ChevronRight, Link2, CloudSun, FolderLock, QrCode, Sparkles, Star, Zap, Bell, HelpCircle, LogIn, LogOut, Brain, BarChart3, Video, Users } from "lucide-react";
+import { Heart, MessageCircle, Calendar, FileText, Mic, Shield, ArrowRight, ChevronRight, Link2, CloudSun, FolderLock, QrCode, Sparkles, Star, Zap, Bell, HelpCircle, LogIn, LogOut, Brain, BarChart3, Video, Users, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import huufiLogo from "@/assets/huufi-logo.png";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroImg from "@/assets/hero-emotional.jpg";
 import FaqSection from "@/components/FaqSection";
 
 const iconMap: Record<string, any> = {
@@ -22,21 +22,27 @@ interface Feature {
   sort_order: number;
 }
 
+const testimonials = [
+  { name: "Lisa M.", role: "Pferdebesitzerin", text: "Endlich hab ich alles an einem Ort – Termine, Notizen, Gesundheitsdaten. HuufiApp fühlt sich an wie eine Freundin, die mitdenkt.", avatar: "🐴" },
+  { name: "Thomas K.", role: "Hufschmied", text: "Meine Kunden lieben es, dass ich ihnen direkt Fotos und Protokolle schicke. Spart mir jeden Tag mindestens eine Stunde.", avatar: "🔨" },
+  { name: "Sarah B.", role: "Reittherapeutin", text: "Die Bewegungsanalyse ist ein Game-Changer. Ich kann meinen Klienten jetzt visuell zeigen, wo wir ansetzen.", avatar: "💚" },
+];
+
 const pricingPlans = [
   {
     tier: "Privat",
     plans: [
-      { name: "Basis", price: "0€", period: "/mo", features: ["Notizen & Cloud-Sync", "1 GB Storage", "Community Support"], highlight: false },
-      { name: "Smart Life", price: "4,90€", period: "/mo", features: ["KI für Bilder & Texte", "Grafiken & Protokolle", "5 GB Storage"], highlight: true },
-      { name: "Agent Mode", price: "14,99€", period: "/mo", features: ["Automatisierte Aufgaben", "Video-Analyse", "10 GB Storage"], highlight: false },
+      { name: "Kostenlos", price: "0€", period: "/mo", features: ["Notizen & Cloud-Sync", "1 GB Speicher", "Community"], highlight: false },
+      { name: "Smart", price: "4,90€", period: "/mo", features: ["KI-Assistent für dein Pferd", "Foto- & Sprachnotizen", "5 GB Speicher"], highlight: true },
+      { name: "Premium", price: "14,99€", period: "/mo", features: ["Video-Bewegungsanalyse", "Automatische Protokolle", "10 GB Speicher"], highlight: false },
     ],
   },
   {
     tier: "Business",
     plans: [
-      { name: "Test-Modus", price: "0€", period: "/mo", features: ["Professioneller Test", "1 GB Storage", "Basis-Features"], highlight: false },
-      { name: "Pro-Business", price: "9,90€", period: "/mo", features: ["Volle KI-Suite", "Beleg-Scanning", "10 GB Storage"], highlight: true },
-      { name: "Expert Agent", price: "19,99€", period: "/mo", features: ["Full Automation", "Video-Bewegungsanalyse", "25 GB Storage"], highlight: false },
+      { name: "Starter", price: "0€", period: "/mo", features: ["Professionell testen", "1 GB Speicher", "Basis-Features"], highlight: false },
+      { name: "Profi", price: "9,90€", period: "/mo", features: ["Kundenverwaltung", "Beleg-Scanning", "10 GB Speicher"], highlight: true },
+      { name: "Expert", price: "19,99€", period: "/mo", features: ["Volle Automatisierung", "Video-Analyse", "25 GB Speicher"], highlight: false },
     ],
   },
 ];
@@ -63,9 +69,9 @@ export default function LandingPage() {
             <span className="text-lg font-bold text-foreground">HuufiApp</span>
           </div>
           <div className="flex items-center gap-4">
-            <a href="#features" className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors">Funktionen</a>
-            <a href="#pricing" className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors">Preise</a>
-            <a href="#faq" className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors">FAQ</a>
+            <a href="#warum" className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors">Warum HuufiApp?</a>
+            <a href="#funktionen" className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors">Funktionen</a>
+            <a href="#preise" className="hidden sm:block text-sm text-muted-foreground hover:text-foreground transition-colors">Preise</a>
             {user ? (
               <>
                 <Link to="/app" className="inline-flex items-center gap-2 px-5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity">
@@ -84,58 +90,93 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* Hero */}
+      {/* Hero – Emotional */}
       <section className="relative pt-16 overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img src={heroBg} alt="" className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-b from-foreground/80 via-foreground/60 to-background" />
+          <img src={heroImg} alt="" className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-b from-foreground/70 via-foreground/50 to-background" />
         </div>
-        <div className="relative z-10 max-w-4xl mx-auto px-6 py-28 md:py-40 text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/20 text-primary-foreground text-xs font-medium mb-6 backdrop-blur-sm border border-primary/30">
-              <Sparkles size={12} /> KI-gestützter Assistent für Pferd & Business
-            </div>
+        <div className="relative z-10 max-w-4xl mx-auto px-6 py-32 md:py-44 text-center">
+          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+            <p className="text-primary text-sm font-medium tracking-wide mb-4 uppercase">Für alle, die Pferde lieben</p>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6">
-              Dein intelligenter<br />
-              <span className="text-gradient">Pferde-Assistent</span>
+              Weil dein Pferd<br />
+              <span className="text-gradient">mehr verdient als Zettelwirtschaft</span>
             </h1>
-            <p className="text-lg md:text-xl text-white/70 max-w-2xl mx-auto mb-10 leading-relaxed">
-              HuufiApp vereint KI, Bewegungsanalyse und Business-Tools – alles in einer App. Für Pferdebesitzer und Profis.
+            <p className="text-lg md:text-xl text-white/80 max-w-2xl mx-auto mb-10 leading-relaxed">
+              Termine, Gesundheit, Hufpflege, Notizen – alles in einer App. 
+              Dein persönlicher Assistent, der mitdenkt und dir den Rücken freihält.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Link to={user ? "/app" : "/auth"} className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl hero-gradient text-primary-foreground text-base font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-primary/30">
-                Kostenlos starten <ChevronRight size={18} />
+              <Link to={user ? "/app" : "/auth"} className="inline-flex items-center gap-2 px-8 py-4 rounded-xl hero-gradient text-primary-foreground text-base font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-primary/30">
+                Kostenlos ausprobieren <Heart size={18} />
               </Link>
-              <a href="#features" className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white text-base font-medium hover:bg-white/20 transition-colors">
+              <a href="#warum" className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 text-white text-base font-medium hover:bg-white/20 transition-colors">
                 Mehr erfahren
               </a>
             </div>
+            <p className="text-white/50 text-xs mt-6">Kein Abo nötig · DSGVO-konform · Sofort startklar</p>
           </motion.div>
         </div>
       </section>
 
-      {/* Trust Bar */}
-      <section className="border-b border-border bg-card">
-        <div className="max-w-6xl mx-auto px-6 py-6 flex flex-wrap items-center justify-center gap-8 text-sm text-muted-foreground">
-          <div className="flex items-center gap-2"><Shield size={16} className="text-primary" /> DSGVO-konform</div>
-          <div className="flex items-center gap-2"><Zap size={16} className="text-primary" /> KI-gestützt</div>
-          <div className="flex items-center gap-2"><Video size={16} className="text-primary" /> Video-Analyse</div>
-          <div className="flex items-center gap-2"><Users size={16} className="text-primary" /> Team-fähig</div>
+      {/* Why Section – Emotional, no tech talk */}
+      <section id="warum" className="max-w-5xl mx-auto px-6 py-24">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Kennst du das?</h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+            Der Hufschmied fragt, wann der Tierarzt zuletzt da war. Du suchst in WhatsApp-Chats, Notizzetteln und deinem Kopf. Und am Ende fehlt doch was.
+          </p>
+        </div>
+        <div className="grid md:grid-cols-3 gap-8">
+          {[
+            { emoji: "📋", title: "Schluss mit Zettelchaos", text: "Alle Infos zu deinem Pferd an einem Ort. Termine, Befunde, Hufprotokolle – übersichtlich und sicher." },
+            { emoji: "🤝", title: "Dein Team, verbunden", text: "Tierarzt, Hufschmied, Osteopath – alle auf dem gleichen Stand. Ohne Telefonate und vergessene Infos." },
+            { emoji: "💡", title: "Ein Assistent, der mitdenkt", text: "Beantwortet deine Fragen, erinnert an Termine und lernt, was für dein Pferd wichtig ist." },
+          ].map((item, i) => (
+            <motion.div key={i} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+              className="text-center p-8 rounded-2xl bg-card border border-border">
+              <div className="text-4xl mb-4">{item.emoji}</div>
+              <h3 className="text-lg font-bold text-foreground mb-2">{item.title}</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">{item.text}</p>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonials */}
+      <section className="bg-card border-y border-border">
+        <div className="max-w-5xl mx-auto px-6 py-20">
+          <h2 className="text-2xl md:text-3xl font-bold text-foreground text-center mb-12">Das sagen Pferdemenschen</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            {testimonials.map((t, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 12 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
+                className="p-6 rounded-2xl bg-background border border-border">
+                <p className="text-sm text-muted-foreground leading-relaxed mb-4 italic">"{t.text}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-lg">{t.avatar}</div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{t.name}</p>
+                    <p className="text-xs text-muted-foreground">{t.role}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </section>
 
       {/* Features from DB */}
-      <section id="features" className="max-w-6xl mx-auto px-6 py-24">
+      <section id="funktionen" className="max-w-6xl mx-auto px-6 py-24">
         <div className="text-center mb-16">
-          <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">Features</span>
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Alles für dein Pferd. An einem Ort.</h2>
-          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Von KI-Chat über Bewegungsanalyse bis zur Kundenverwaltung.</p>
+          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Alles, was du brauchst</h2>
+          <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Übersichtlich, einfach und auf dich zugeschnitten.</p>
         </div>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f, i) => {
             const Icon = iconMap[f.icon] || Sparkles;
             return (
-              <motion.div key={f.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}
+              <motion.div key={f.id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
                 className="p-6 rounded-2xl bg-card border border-border hover:border-primary/30 hover:shadow-lg hover:shadow-primary/5 transition-all group relative">
                 {f.badge && (
                   <span className="absolute top-4 right-4 px-2 py-0.5 rounded-full text-[10px] font-medium bg-primary text-primary-foreground">{f.badge}</span>
@@ -151,21 +192,19 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Preview */}
-      <section id="pricing" className="bg-card border-y border-border">
+      {/* Pricing */}
+      <section id="preise" className="bg-card border-y border-border">
         <div className="max-w-6xl mx-auto px-6 py-24">
           <div className="text-center mb-12">
-            <span className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-medium mb-4">Preise</span>
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Wähle deinen Plan</h2>
-            <p className="text-muted-foreground text-lg max-w-xl mx-auto">Starte kostenlos und skaliere mit deinen Anforderungen.</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">Fair & transparent</h2>
+            <p className="text-muted-foreground text-lg max-w-xl mx-auto">Starte kostenlos – upgrade, wenn du bereit bist.</p>
           </div>
 
-          {/* Tabs */}
           <div className="flex items-center justify-center gap-1 p-1 rounded-xl bg-secondary w-fit mx-auto mb-10">
             {(["Privat", "Business"] as const).map((t) => (
               <button key={t} onClick={() => setPricingTab(t)}
                 className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${pricingTab === t ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                {t}
+                {t === "Privat" ? "🐴 Privat" : "💼 Business"}
               </button>
             ))}
           </div>
@@ -173,7 +212,7 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {activePricing.plans.map((plan, i) => (
               <motion.div key={plan.name} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1 }}
-                className={`p-6 rounded-2xl border ${plan.highlight ? "bg-foreground text-background border-foreground shadow-xl shadow-primary/10 scale-105" : "bg-card border-border"} flex flex-col`}>
+                className={`p-6 rounded-2xl border ${plan.highlight ? "bg-foreground text-background border-foreground shadow-xl shadow-primary/10 scale-105" : "bg-background border-border"} flex flex-col`}>
                 <p className={`text-sm font-medium mb-2 ${plan.highlight ? "text-primary" : "text-muted-foreground"}`}>{plan.name}</p>
                 <div className="flex items-baseline gap-1 mb-6">
                   <span className={`text-3xl font-bold ${plan.highlight ? "text-background" : "text-foreground"}`}>{plan.price}</span>
@@ -182,7 +221,7 @@ export default function LandingPage() {
                 <ul className="space-y-3 mb-8 flex-1">
                   {plan.features.map((f) => (
                     <li key={f} className={`flex items-center gap-2 text-sm ${plan.highlight ? "text-background/80" : "text-muted-foreground"}`}>
-                      <ChevronRight size={14} className={plan.highlight ? "text-primary" : "text-primary"} />
+                      <Check size={14} className="text-primary flex-shrink-0" />
                       {f}
                     </li>
                   ))}
@@ -198,26 +237,23 @@ export default function LandingPage() {
               </motion.div>
             ))}
           </div>
-
-          <p className="text-center text-xs text-muted-foreground mt-8">
-            Team-Pläne ab 49€/mo für 1-5 Nutzer verfügbar. <a href="#faq" className="text-primary hover:underline">Mehr erfahren</a>
-          </p>
         </div>
       </section>
 
       {/* FAQ */}
       <FaqSection />
 
-      {/* CTA */}
+      {/* Emotional CTA */}
       <section className="max-w-4xl mx-auto px-6 pb-24">
-        <div className="relative p-10 md:p-16 rounded-3xl overflow-hidden" style={{ background: "linear-gradient(135deg, hsl(0 0% 7%) 0%, hsl(0 0% 15%) 100%)" }}>
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjA1KSIvPjwvc3ZnPg==')] opacity-50" />
-          <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-primary/10 blur-3xl" />
+        <div className="relative p-10 md:p-16 rounded-3xl overflow-hidden" style={{ background: "linear-gradient(135deg, hsl(24 90% 40%) 0%, hsl(24 90% 55%) 100%)" }}>
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMSIgZmlsbD0icmdiYSgyNTUsMjU1LDI1NSwwLjEpIi8+PC9zdmc+')] opacity-50" />
           <div className="relative z-10 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Bereit für intelligente Pferde-Betreuung?</h2>
-            <p className="text-white/60 text-lg mb-8 max-w-xl mx-auto">Starte jetzt kostenlos und entdecke, wie HuufiApp dir den Kopf freihält.</p>
-            <Link to={user ? "/app" : "/auth"} className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl hero-gradient text-primary-foreground text-base font-semibold hover:opacity-90 transition-opacity shadow-lg shadow-primary/30">
-              Jetzt starten <ArrowRight size={18} />
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-4">Dein Pferd verdient das Beste.</h2>
+            <p className="text-white/80 text-lg mb-8 max-w-xl mx-auto">
+              Mach Schluss mit verstreuten Infos und vergessenen Terminen. Starte jetzt – kostenlos und unverbindlich.
+            </p>
+            <Link to={user ? "/app" : "/auth"} className="inline-flex items-center gap-2 px-8 py-4 rounded-xl bg-white text-foreground text-base font-semibold hover:bg-white/90 transition-colors shadow-lg">
+              Jetzt kostenlos starten <Heart size={18} className="text-primary" />
             </Link>
           </div>
         </div>
@@ -228,7 +264,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
             <img src={huufiLogo} alt="" className="h-6 w-6" />
-            <span className="text-sm text-muted-foreground">&copy; 2026 HuufiApp &middot; PASSA ON Digital</span>
+            <span className="text-sm text-muted-foreground">&copy; 2026 HuufiApp · PASSA ON Digital</span>
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <Link to="/impressum" className="hover:text-foreground transition-colors">Impressum</Link>
