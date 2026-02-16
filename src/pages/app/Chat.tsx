@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import VoiceAgent from "@/components/VoiceAgent";
+import SmartTriggers from "@/components/SmartTriggers";
 
 const getAccessToken = async () => {
   const { data } = await supabase.auth.getSession();
@@ -205,15 +206,20 @@ export default function Chat() {
           {/* Messages */}
           <div className="flex-1 overflow-y-auto space-y-4 pb-4">
             {messages.length === 0 && (
-              <div className="text-center py-16">
-                <Bot size={40} className="text-primary/30 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-foreground mb-2">HufiAi Assistent</h3>
-                <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                  Frag mich alles rund ums Pferd – Gesundheit, Fütterung, Haltung oder Terminplanung.
-                </p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Konto: {accountType === "pro" ? "✨ Pro" : "⚡ Free"}
-                </p>
+              <div className="text-center py-16 space-y-6">
+                <div>
+                  <Bot size={40} className="text-primary/30 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">HufiAi Assistent</h3>
+                  <p className="text-sm text-muted-foreground max-w-md mx-auto">
+                    Frag mich alles rund ums Pferd – Gesundheit, Fütterung, Haltung oder Terminplanung.
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Konto: {accountType === "pro" ? "✨ Pro" : "⚡ Free"}
+                  </p>
+                </div>
+                <div className="max-w-md mx-auto text-left">
+                  <SmartTriggers onSendMessage={(text) => { setInput(text); }} />
+                </div>
               </div>
             )}
             {messages.map((msg) => (
