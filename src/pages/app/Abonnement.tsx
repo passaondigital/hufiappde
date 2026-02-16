@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import UsageWidget from "@/components/UsageWidget";
 
 // Stripe product/price mapping
 const TIERS = {
@@ -201,6 +202,9 @@ export default function AbonnementPage() {
           </button>
         )}
       </div>
+
+      {/* Usage & Add-ons */}
+      <UsageWidget />
 
       <p className="text-xs text-muted-foreground text-center">
         Alle Preise inkl. MwSt. Jederzeit kündbar. Nach dem Checkout wird dein Plan sofort aktiviert.
