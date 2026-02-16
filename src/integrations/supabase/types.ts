@@ -981,6 +981,14 @@ export type Database = {
     }
     Functions: {
       check_ai_limit: { Args: { p_user_id: string }; Returns: Json }
+      credit_storage: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: undefined
+      }
+      credit_tokens: {
+        Args: { p_amount: number; p_user_id: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
