@@ -411,6 +411,7 @@ export type Database = {
       }
       llm_providers: {
         Row: {
+          api_endpoint: string | null
           api_key_secret_name: string
           cost_per_1m_input: number | null
           cost_per_1m_output: number | null
@@ -419,10 +420,12 @@ export type Database = {
           is_active: boolean | null
           model_name: string
           name: string
+          priority: number | null
           provider: string
           updated_at: string
         }
         Insert: {
+          api_endpoint?: string | null
           api_key_secret_name: string
           cost_per_1m_input?: number | null
           cost_per_1m_output?: number | null
@@ -431,10 +434,12 @@ export type Database = {
           is_active?: boolean | null
           model_name: string
           name: string
+          priority?: number | null
           provider: string
           updated_at?: string
         }
         Update: {
+          api_endpoint?: string | null
           api_key_secret_name?: string
           cost_per_1m_input?: number | null
           cost_per_1m_output?: number | null
@@ -443,6 +448,7 @@ export type Database = {
           is_active?: boolean | null
           model_name?: string
           name?: string
+          priority?: number | null
           provider?: string
           updated_at?: string
         }
