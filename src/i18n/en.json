@@ -1,0 +1,148 @@
+{
+  "nav": {
+    "whyHuufi": "Why HuufiApp?",
+    "features": "Features",
+    "pricing": "Pricing",
+    "toApp": "Go to App",
+    "signOut": "Sign Out",
+    "signIn": "Sign In"
+  },
+  "hero": {
+    "badge": "For everyone who loves horses",
+    "title1": "Because your horse",
+    "title2": "deserves more than paperwork",
+    "subtitle": "Appointments, health, hoof care, notes – all in one app. Your personal assistant that thinks ahead and has your back.",
+    "cta": "Try for free",
+    "learnMore": "Learn more",
+    "trust": "No subscription needed · GDPR compliant · Ready to go"
+  },
+  "why": {
+    "title": "Sound familiar?",
+    "subtitle": "The farrier asks when the vet last visited. You're searching through WhatsApp chats, sticky notes, and your memory. And something's always missing.",
+    "items": [
+      { "emoji": "📋", "title": "No more paper chaos", "text": "All info about your horse in one place. Appointments, findings, hoof reports – clear and secure." },
+      { "emoji": "🤝", "title": "Your team, connected", "text": "Vet, farrier, osteopath – everyone on the same page. No phone calls or forgotten info." },
+      { "emoji": "💡", "title": "An assistant that thinks ahead", "text": "Answers your questions, reminds you of appointments, and learns what matters for your horse." }
+    ]
+  },
+  "testimonials": {
+    "title": "What horse people say",
+    "items": [
+      { "name": "Lisa M.", "role": "Horse owner", "text": "Finally everything in one place – appointments, notes, health data. HuufiApp feels like a friend who thinks ahead." },
+      { "name": "Thomas K.", "role": "Farrier", "text": "My clients love that I can send them photos and reports directly. Saves me at least an hour every day." },
+      { "name": "Sarah B.", "role": "Riding therapist", "text": "The motion analysis is a game-changer. I can now visually show my clients where we need to work." }
+    ]
+  },
+  "featuresSection": {
+    "title": "Everything you need",
+    "subtitle": "Clear, simple, and tailored to you."
+  },
+  "pricingSection": {
+    "title": "Fair & transparent",
+    "subtitle": "Start for free – upgrade when you're ready.",
+    "private": "🐴 Private",
+    "business": "💼 Business",
+    "free": "Start for free",
+    "select": "Choose plan"
+  },
+  "cta": {
+    "title": "Your horse deserves the best.",
+    "subtitle": "Stop scattered info and forgotten appointments. Start now – free and no strings attached.",
+    "button": "Start for free now"
+  },
+  "faq": {
+    "title": "Frequently Asked Questions",
+    "subtitle": "Everything you need to know about HuufiApp.",
+    "items": [
+      { "q": "What is HuufiApp?", "a": "HuufiApp is your AI-powered assistant for horse health, scheduling, and documentation." },
+      { "q": "How much does HuufiApp cost?", "a": "The basic version is free. Premium plans start at €4.90/month." },
+      { "q": "How does the AI assistant work?", "a": "Open the chat or use the microphone. The AI knows your data and responds contextually." },
+      { "q": "Can I export my data?", "a": "You can download individual documents from the vault. A full data export is planned." }
+    ]
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "horses": "Horses",
+    "assistant": "Assistant",
+    "notes": "Notes",
+    "appointments": "Appointments",
+    "customers": "Customers",
+    "vault": "Vault",
+    "knowledge": "Knowledge",
+    "funnel": "Funnel",
+    "ecosystem": "Ecosystem",
+    "subscription": "Subscription",
+    "analysis": "Analysis",
+    "feedback": "Feedback",
+    "settings": "Settings",
+    "admin": "Admin"
+  },
+  "dashboard": {
+    "goodMorning": "Good morning",
+    "goodDay": "Good afternoon",
+    "goodEvening": "Good evening",
+    "personal": "Personal",
+    "horse": "Horse",
+    "business": "Business",
+    "personalSub": "Your personal overview",
+    "horseSub": "Everything about your horses",
+    "businessSub": "Your business at a glance",
+    "horses": "Horses",
+    "nextAppointments": "Upcoming Appointments",
+    "notes": "Notes",
+    "customers": "Customers",
+    "connect": "Connect",
+    "vault": "Vault",
+    "recentCustomers": "Recent Customers",
+    "showAll": "Show all",
+    "noCustomers": "No customers added yet.",
+    "firstCustomer": "Add first customer",
+    "upcomingAppointments": "Upcoming Appointments",
+    "all": "All",
+    "noAppointments": "No upcoming appointments",
+    "recentNotes": "Recent Notes",
+    "recentHorseNotes": "Recent Horse Notes",
+    "noNotes": "No notes yet",
+    "general": "General",
+    "noPhone": "No phone number",
+    "addCustomer": "Add customer",
+    "addHorse": "Add horse",
+    "createNote": "Create note",
+    "askAssistant": "Ask assistant",
+    "selectMode": "Select usage mode",
+    "selectModeSub": "Customize your dashboard: Personal, Horse, or Business.",
+    "choose": "Choose"
+  },
+  "videoAnalysis": {
+    "title": "Motion Analysis",
+    "subtitle": "AI-powered gait analysis for horses – detect lameness early.",
+    "poseEstimation": "Pose Estimation & Skeleton Overlay",
+    "poseDesc": "Upload a video of your horse and get automatic analysis of movement patterns.",
+    "uploadTitle": "Upload Video",
+    "selectVideo": "Select video",
+    "fileTypes": "MP4, MOV, AVI – max. 100 MB",
+    "otherVideo": "Different video",
+    "uploading": "Uploading...",
+    "analyzing": "Analyzing...",
+    "startAnalysis": "Start Analysis",
+    "reAnalyze": "Re-analyze",
+    "analysisResult": "Analysis Result",
+    "symmetryScore": "Symmetry Score",
+    "lamenessIndex": "Lameness Index",
+    "beatClarity": "Beat Clarity",
+    "aiHint": "AI Note",
+    "premium": "Premium Feature",
+    "premiumDesc": "Full motion analysis with skeleton overlay and PDF export will be available for premium users.",
+    "upgrade": "Upgrade",
+    "skeletonTracking": "Skeleton Tracking",
+    "symmetryScoreLabel": "Symmetry Score",
+    "lamenessIndexLabel": "Lameness Index",
+    "pdfReport": "PDF Report",
+    "analysisReady": "Analysis ready",
+    "skeletonAnalyzing": "Analyzing skeleton..."
+  },
+  "language": {
+    "de": "Deutsch",
+    "en": "English"
+  }
+}

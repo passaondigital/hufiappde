@@ -8,25 +8,27 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useTranslation } from "react-i18next";
 import huufiLogo from "@/assets/huufi-logo.png";
 import InstallPrompt from "@/components/InstallPrompt";
 import VoiceAgent from "@/components/VoiceAgent";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
 const navItems = [
-  { path: "/app", icon: LayoutDashboard, label: "Dashboard" },
-  { path: "/app/pferde", icon: Heart, label: "Pferde" },
-  { path: "/app/chat", icon: MessageCircle, label: "Assistent" },
-  { path: "/app/notizen", icon: FileText, label: "Notizen" },
-  { path: "/app/termine", icon: Calendar, label: "Termine" },
-  { path: "/app/kunden", icon: Users, label: "Kunden" },
-  { path: "/app/tresor", icon: FolderLock, label: "Tresor" },
-  { path: "/app/wissen", icon: Brain, label: "Wissen" },
-  { path: "/app/trichter", icon: Filter, label: "Trichter" },
-  { path: "/app/ecosystem", icon: Globe, label: "Ecosystem" },
-  { path: "/app/abonnement", icon: CreditCard, label: "Abonnement" },
-  { path: "/app/video-analyse", icon: Activity, label: "Analyse" },
-  { path: "/app/feedback", icon: MessageSquarePlus, label: "Feedback" },
-  { path: "/app/einstellungen", icon: Settings, label: "Einstellungen" },
+  { path: "/app", icon: LayoutDashboard, labelKey: "sidebar.dashboard" },
+  { path: "/app/pferde", icon: Heart, labelKey: "sidebar.horses" },
+  { path: "/app/chat", icon: MessageCircle, labelKey: "sidebar.assistant" },
+  { path: "/app/notizen", icon: FileText, labelKey: "sidebar.notes" },
+  { path: "/app/termine", icon: Calendar, labelKey: "sidebar.appointments" },
+  { path: "/app/kunden", icon: Users, labelKey: "sidebar.customers" },
+  { path: "/app/tresor", icon: FolderLock, labelKey: "sidebar.vault" },
+  { path: "/app/wissen", icon: Brain, labelKey: "sidebar.knowledge" },
+  { path: "/app/trichter", icon: Filter, labelKey: "sidebar.funnel" },
+  { path: "/app/ecosystem", icon: Globe, labelKey: "sidebar.ecosystem" },
+  { path: "/app/abonnement", icon: CreditCard, labelKey: "sidebar.subscription" },
+  { path: "/app/video-analyse", icon: Activity, labelKey: "sidebar.analysis" },
+  { path: "/app/feedback", icon: MessageSquarePlus, labelKey: "sidebar.feedback" },
+  { path: "/app/einstellungen", icon: Settings, labelKey: "sidebar.settings" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -34,13 +36,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
+  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
   const isSubPage = location.pathname !== "/app";
 
   const allNavItems = isAdmin
-    ? [...navItems, { path: "/app/admin", icon: Shield, label: "Admin" }]
+    ? [...navItems, { path: "/app/admin", icon: Shield, labelKey: "sidebar.admin" }]
     : navItems;
 
   return (
@@ -77,15 +80,22 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   ${collapsed ? "justify-center" : ""}`}
               >
                 <item.icon size={20} />
-                {!collapsed && <span>{item.label}</span>}
+                {!collapsed && <span>{t(item.labelKey)}</span>}
               </Link>
             );
           })}
         </nav>
 
+        {/* Language switcher in sidebar */}
+        {!collapsed && (
+          <div className="px-4 py-2">
+            <LanguageSwitcher className="w-full justify-center" />
+          </div>
+        )}
+
         <button onClick={signOut} className={`flex items-center gap-3 px-6 py-4 border-t border-sidebar-border text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors text-sm ${collapsed ? "justify-center px-3" : ""}`}>
           <LogOut size={18} />
-          {!collapsed && <span>Abmelden</span>}
+          {!collapsed && <span>{t("nav.signOut")}</span>}
         </button>
 
         <button onClick={() => setCollapsed(!collapsed)} className="hidden md:flex items-center justify-center py-3 border-t border-sidebar-border text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors">
@@ -103,7 +113,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </button>
           )}
           <h1 className="text-lg font-semibold">
-            {allNavItems.find((n) => n.path === "/app" ? location.pathname === "/app" : location.pathname.startsWith(n.path))?.label || "HuufiApp"}
+            {t(allNavItems.find((n) => n.path === "/app" ? location.pathname === "/app" : location.pathname.startsWith(n.path))?.labelKey || "sidebar.dashboard")}
           </h1>
         </header>
         <div className="flex-1 overflow-y-auto p-6 pb-24 md:pb-6">{children}</div>
@@ -111,29 +121,23 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         {/* Mobile Bottom Action Bar */}
         <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border safe-bottom">
           <div className="flex items-center justify-around px-4 py-2">
-            {/* Left: Quick Note */}
             <Link to="/app/notizen" className="flex flex-col items-center gap-1 p-2 text-muted-foreground hover:text-primary transition-colors">
               <PenLine size={22} />
-              <span className="text-[10px] font-medium">Notiz</span>
+              <span className="text-[10px] font-medium">{t("sidebar.notes")}</span>
             </Link>
-
-            {/* Center: Microphone - opens Voice Agent */}
             <button
               onClick={() => setVoiceOpen(true)}
               className="relative -mt-6 flex items-center justify-center w-16 h-16 rounded-full shadow-lg transition-all duration-200 bg-primary text-primary-foreground hover:scale-105"
             >
               <Mic size={26} />
             </button>
-
-            {/* Right: Quick Add */}
             <Link to="/app/pferde" className="flex flex-col items-center gap-1 p-2 text-muted-foreground hover:text-primary transition-colors">
               <Plus size={22} />
-              <span className="text-[10px] font-medium">Anlegen</span>
+              <span className="text-[10px] font-medium">{t("sidebar.horses")}</span>
             </Link>
           </div>
         </div>
 
-        {/* Voice Agent Overlay */}
         <VoiceAgent isOpen={voiceOpen} onClose={() => setVoiceOpen(false)} />
       </main>
     </div>

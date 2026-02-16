@@ -1,0 +1,148 @@
+{
+  "nav": {
+    "whyHuufi": "Warum HuufiApp?",
+    "features": "Funktionen",
+    "pricing": "Preise",
+    "toApp": "Zur App",
+    "signOut": "Abmelden",
+    "signIn": "Anmelden"
+  },
+  "hero": {
+    "badge": "Für alle, die Pferde lieben",
+    "title1": "Weil dein Pferd",
+    "title2": "mehr verdient als Zettelwirtschaft",
+    "subtitle": "Termine, Gesundheit, Hufpflege, Notizen – alles in einer App. Dein persönlicher Assistent, der mitdenkt und dir den Rücken freihält.",
+    "cta": "Kostenlos ausprobieren",
+    "learnMore": "Mehr erfahren",
+    "trust": "Kein Abo nötig · DSGVO-konform · Sofort startklar"
+  },
+  "why": {
+    "title": "Kennst du das?",
+    "subtitle": "Der Hufschmied fragt, wann der Tierarzt zuletzt da war. Du suchst in WhatsApp-Chats, Notizzetteln und deinem Kopf. Und am Ende fehlt doch was.",
+    "items": [
+      { "emoji": "📋", "title": "Schluss mit Zettelchaos", "text": "Alle Infos zu deinem Pferd an einem Ort. Termine, Befunde, Hufprotokolle – übersichtlich und sicher." },
+      { "emoji": "🤝", "title": "Dein Team, verbunden", "text": "Tierarzt, Hufschmied, Osteopath – alle auf dem gleichen Stand. Ohne Telefonate und vergessene Infos." },
+      { "emoji": "💡", "title": "Ein Assistent, der mitdenkt", "text": "Beantwortet deine Fragen, erinnert an Termine und lernt, was für dein Pferd wichtig ist." }
+    ]
+  },
+  "testimonials": {
+    "title": "Das sagen Pferdemenschen",
+    "items": [
+      { "name": "Lisa M.", "role": "Pferdebesitzerin", "text": "Endlich hab ich alles an einem Ort – Termine, Notizen, Gesundheitsdaten. HuufiApp fühlt sich an wie eine Freundin, die mitdenkt." },
+      { "name": "Thomas K.", "role": "Hufschmied", "text": "Meine Kunden lieben es, dass ich ihnen direkt Fotos und Protokolle schicke. Spart mir jeden Tag mindestens eine Stunde." },
+      { "name": "Sarah B.", "role": "Reittherapeutin", "text": "Die Bewegungsanalyse ist ein Game-Changer. Ich kann meinen Klienten jetzt visuell zeigen, wo wir ansetzen." }
+    ]
+  },
+  "featuresSection": {
+    "title": "Alles, was du brauchst",
+    "subtitle": "Übersichtlich, einfach und auf dich zugeschnitten."
+  },
+  "pricingSection": {
+    "title": "Fair & transparent",
+    "subtitle": "Starte kostenlos – upgrade, wenn du bereit bist.",
+    "private": "🐴 Privat",
+    "business": "💼 Business",
+    "free": "Kostenlos starten",
+    "select": "Plan wählen"
+  },
+  "cta": {
+    "title": "Dein Pferd verdient das Beste.",
+    "subtitle": "Mach Schluss mit verstreuten Infos und vergessenen Terminen. Starte jetzt – kostenlos und unverbindlich.",
+    "button": "Jetzt kostenlos starten"
+  },
+  "faq": {
+    "title": "Häufig gestellte Fragen",
+    "subtitle": "Alles, was du über HuufiApp wissen musst.",
+    "items": [
+      { "q": "Was ist HuufiApp?", "a": "HuufiApp ist dein KI-gestützter Assistent für Pferdegesundheit, Terminplanung und Dokumentation." },
+      { "q": "Was kostet HuufiApp?", "a": "Die Basis-Version ist kostenlos. Premium-Pläne starten ab 4,90€/Monat." },
+      { "q": "Wie funktioniert der KI-Assistent?", "a": "Öffne den Chat oder nutze das Mikrofon. Die KI kennt deine Daten und antwortet kontextbezogen." },
+      { "q": "Kann ich meine Daten exportieren?", "a": "Dokumente aus dem Tresor kannst du einzeln herunterladen. Ein vollständiger Datenexport ist geplant." }
+    ]
+  },
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "horses": "Pferde",
+    "assistant": "Assistent",
+    "notes": "Notizen",
+    "appointments": "Termine",
+    "customers": "Kunden",
+    "vault": "Tresor",
+    "knowledge": "Wissen",
+    "funnel": "Trichter",
+    "ecosystem": "Ecosystem",
+    "subscription": "Abonnement",
+    "analysis": "Analyse",
+    "feedback": "Feedback",
+    "settings": "Einstellungen",
+    "admin": "Admin"
+  },
+  "dashboard": {
+    "goodMorning": "Guten Morgen",
+    "goodDay": "Guten Tag",
+    "goodEvening": "Guten Abend",
+    "personal": "Persönlich",
+    "horse": "Pferd",
+    "business": "Business",
+    "personalSub": "Dein persönlicher Überblick",
+    "horseSub": "Alles rund um deine Pferde",
+    "businessSub": "Dein Business auf einen Blick",
+    "horses": "Pferde",
+    "nextAppointments": "Nächste Termine",
+    "notes": "Notizen",
+    "customers": "Kunden",
+    "connect": "Connect",
+    "vault": "Tresor",
+    "recentCustomers": "Letzte Kunden",
+    "showAll": "Alle anzeigen",
+    "noCustomers": "Noch keine Kunden angelegt.",
+    "firstCustomer": "Ersten Kunden anlegen",
+    "upcomingAppointments": "Nächste Termine",
+    "all": "Alle",
+    "noAppointments": "Keine anstehenden Termine",
+    "recentNotes": "Letzte Notizen",
+    "recentHorseNotes": "Letzte Pferde-Notizen",
+    "noNotes": "Noch keine Notizen",
+    "general": "Allgemein",
+    "noPhone": "Keine Telefonnr.",
+    "addCustomer": "Kunde anlegen",
+    "addHorse": "Pferd anlegen",
+    "createNote": "Notiz erstellen",
+    "askAssistant": "Assistent fragen",
+    "selectMode": "Nutzungsmodus wählen",
+    "selectModeSub": "Passe dein Dashboard an: Persönlich, Pferd oder Business.",
+    "choose": "Wählen"
+  },
+  "videoAnalysis": {
+    "title": "Bewegungsanalyse",
+    "subtitle": "KI-gestützte Ganganalyse für Pferde – Lahmheiten frühzeitig erkennen.",
+    "poseEstimation": "Pose Estimation & Skelett-Overlay",
+    "poseDesc": "Lade ein Video deines Pferdes hoch und erhalte eine automatische Analyse der Bewegungsmuster.",
+    "uploadTitle": "Video hochladen",
+    "selectVideo": "Video auswählen",
+    "fileTypes": "MP4, MOV, AVI – max. 100 MB",
+    "otherVideo": "Anderes Video",
+    "uploading": "Wird hochgeladen...",
+    "analyzing": "Analyse läuft...",
+    "startAnalysis": "Analyse starten",
+    "reAnalyze": "Erneut analysieren",
+    "analysisResult": "Analyse-Ergebnis",
+    "symmetryScore": "Symmetrie-Score",
+    "lamenessIndex": "Lahmheits-Index",
+    "beatClarity": "Taktklarheit",
+    "aiHint": "KI-Hinweis",
+    "premium": "Premium-Feature",
+    "premiumDesc": "Die vollständige Bewegungsanalyse mit Skelett-Overlay und PDF-Export wird für Premium-Nutzer verfügbar sein.",
+    "upgrade": "Upgrade",
+    "skeletonTracking": "Skelett-Tracking",
+    "symmetryScoreLabel": "Symmetrie-Score",
+    "lamenessIndexLabel": "Lahmheits-Index",
+    "pdfReport": "PDF-Report",
+    "analysisReady": "Analyse bereit",
+    "skeletonAnalyzing": "Skelett wird analysiert..."
+  },
+  "language": {
+    "de": "Deutsch",
+    "en": "English"
+  }
+}
