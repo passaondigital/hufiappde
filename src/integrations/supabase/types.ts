@@ -501,6 +501,54 @@ export type Database = {
           },
         ]
       }
+      motion_analyses: {
+        Row: {
+          ai_note: string | null
+          beat_clarity: number
+          beat_desc: string | null
+          created_at: string
+          frame_image_url: string | null
+          horse_name: string | null
+          id: string
+          lameness_desc: string | null
+          lameness_index: number
+          owner_name: string | null
+          symmetry_desc: string | null
+          symmetry_score: number
+          user_id: string
+        }
+        Insert: {
+          ai_note?: string | null
+          beat_clarity: number
+          beat_desc?: string | null
+          created_at?: string
+          frame_image_url?: string | null
+          horse_name?: string | null
+          id?: string
+          lameness_desc?: string | null
+          lameness_index: number
+          owner_name?: string | null
+          symmetry_desc?: string | null
+          symmetry_score: number
+          user_id: string
+        }
+        Update: {
+          ai_note?: string | null
+          beat_clarity?: number
+          beat_desc?: string | null
+          created_at?: string
+          frame_image_url?: string | null
+          horse_name?: string | null
+          id?: string
+          lameness_desc?: string | null
+          lameness_index?: number
+          owner_name?: string | null
+          symmetry_desc?: string | null
+          symmetry_score?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       mvp_question_responses: {
         Row: {
           created_at: string

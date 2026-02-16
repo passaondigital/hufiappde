@@ -1,11 +1,14 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Video, Upload, Play, Pause, AlertTriangle, Activity, Lock, Sparkles, ArrowRight, SkipForward, FileDown, Camera } from "lucide-react";
+import { Video, Upload, Play, Pause, AlertTriangle, Activity, Lock, Sparkles, ArrowRight, SkipForward, FileDown, Camera, History, Save } from "lucide-react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import PoseOverlay from "@/components/PoseOverlay";
 import { exportAnalysisPDF } from "@/utils/exportAnalysisPDF";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import AnalysisHistory from "@/components/AnalysisHistory";
 
 type AnalysisStatus = "idle" | "loading" | "analyzing" | "done";
 
@@ -21,6 +24,7 @@ interface AnalysisResult {
 
 export default function VideoAnalyse() {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [status, setStatus] = useState<AnalysisStatus>("idle");
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [playing, setPlaying] = useState(false);
@@ -29,6 +33,9 @@ export default function VideoAnalyse() {
   const [horseName, setHorseName] = useState("");
   const [ownerName, setOwnerName] = useState("");
   const [frameCapture, setFrameCapture] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<"analyse" | "history">("analyse");
+  const [saving, setSaving] = useState(false);
+  const [historyKey, setHistoryKey] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const poseCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -149,6 +156,34 @@ export default function VideoAnalyse() {
     });
   };
 
+  const handleSaveToHistory = async () => {
+    if (!analysisResult || !user) {
+      toast.error("Bitte zuerst einloggen.");
+      return;
+    }
+    setSaving(true);
+    const { error } = await supabase.from("motion_analyses").insert({
+      user_id: user.id,
+      horse_name: horseName.trim() || null,
+      owner_name: ownerName.trim() || null,
+      symmetry_score: analysisResult.symmetryScore,
+      lameness_index: analysisResult.lamenessIndex,
+      beat_clarity: analysisResult.beatClarity,
+      symmetry_desc: analysisResult.symmetryDesc,
+      lameness_desc: analysisResult.lamenessDesc,
+      beat_desc: analysisResult.beatDesc,
+      ai_note: analysisResult.aiNote,
+    });
+    setSaving(false);
+    if (error) {
+      toast.error("Fehler beim Speichern");
+      console.error(error);
+    } else {
+      toast.success(t("videoAnalysis.savedToHistory", "Analyse gespeichert!"));
+      setHistoryKey((k) => k + 1);
+    }
+  };
+
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       <div>
@@ -158,6 +193,31 @@ export default function VideoAnalyse() {
         </h2>
         <p className="text-muted-foreground mt-1">{t("videoAnalysis.subtitle")}</p>
       </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 rounded-xl bg-secondary/50 w-fit">
+        <button
+          onClick={() => setActiveTab("analyse")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+            activeTab === "analyse" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <Activity size={14} /> {t("videoAnalysis.tabAnalysis", "Analyse")}
+        </button>
+        <button
+          onClick={() => setActiveTab("history")}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-2 ${
+            activeTab === "history" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          <History size={14} /> {t("videoAnalysis.tabHistory", "Verlauf")}
+        </button>
+      </div>
+
+      {activeTab === "history" ? (
+        <AnalysisHistory key={historyKey} />
+      ) : (
+      <>
 
       {/* Feature Banner */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
@@ -311,12 +371,18 @@ export default function VideoAnalyse() {
       {/* Results */}
       {status === "done" && analysisResult && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between flex-wrap gap-2">
             <h3 className="text-sm font-semibold text-foreground">{t("videoAnalysis.analysisResult")}</h3>
-            <button onClick={handleExportPDF}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity">
-              <FileDown size={14} /> PDF Export
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={handleSaveToHistory} disabled={saving}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-secondary-foreground text-xs font-medium hover:bg-secondary/80 transition-colors disabled:opacity-50">
+                <Save size={14} /> {saving ? "..." : t("videoAnalysis.saveToHistory", "Speichern")}
+              </button>
+              <button onClick={handleExportPDF}
+                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity">
+                <FileDown size={14} /> PDF Export
+              </button>
+            </div>
           </div>
           <div className="grid sm:grid-cols-3 gap-4">
             {[
@@ -356,6 +422,8 @@ export default function VideoAnalyse() {
           {t("videoAnalysis.upgrade")} <ArrowRight size={12} />
         </Link>
       </motion.div>
+      </>
+      )}
     </div>
   );
 }
