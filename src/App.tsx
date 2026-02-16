@@ -25,6 +25,7 @@ import Feedback from "./pages/app/Feedback";
 import KnowledgeVault from "./pages/app/KnowledgeVault";
 import Trichter from "./pages/app/Trichter";
 import Ecosystem from "./pages/app/Ecosystem";
+import Abonnement from "./pages/app/Abonnement";
 
 const queryClient = new QueryClient();
 
@@ -56,6 +57,7 @@ function AppRoutes() {
       <Route path="/app/wissen" element={<ProtectedRoute><AppLayout><KnowledgeVault /></AppLayout></ProtectedRoute>} />
       <Route path="/app/trichter" element={<ProtectedRoute><AppLayout><Trichter /></AppLayout></ProtectedRoute>} />
       <Route path="/app/ecosystem" element={<ProtectedRoute><AppLayout><Ecosystem /></AppLayout></ProtectedRoute>} />
+      <Route path="/app/abonnement" element={<ProtectedRoute><AppLayout><Abonnement /></AppLayout></ProtectedRoute>} />
       <Route path="/app/admin" element={<ProtectedRoute><AppLayout><AdminDashboard /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
