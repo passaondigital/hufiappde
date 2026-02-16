@@ -2,9 +2,7 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  LayoutDashboard, Heart, MessageCircle, FileText, Calendar, Users,
-  Menu, X, ChevronLeft, LogOut, Shield, Mic, Plus, PenLine, ArrowLeft,
-  FolderLock, Settings, Link2, MessageSquarePlus, Brain, Filter, Globe, CreditCard, Activity,
+  CalendarDays, Mic, Archive, Settings, User, ArrowLeft, Shield,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -14,132 +12,160 @@ import InstallPrompt from "@/components/InstallPrompt";
 import VoiceAgent from "@/components/VoiceAgent";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-const navItems = [
-  { path: "/app", icon: LayoutDashboard, labelKey: "sidebar.dashboard" },
-  { path: "/app/pferde", icon: Heart, labelKey: "sidebar.horses" },
-  { path: "/app/chat", icon: MessageCircle, labelKey: "sidebar.assistant" },
-  { path: "/app/notizen", icon: FileText, labelKey: "sidebar.notes" },
-  { path: "/app/termine", icon: Calendar, labelKey: "sidebar.appointments" },
-  { path: "/app/kunden", icon: Users, labelKey: "sidebar.customers" },
-  { path: "/app/tresor", icon: FolderLock, labelKey: "sidebar.vault" },
-  { path: "/app/wissen", icon: Brain, labelKey: "sidebar.knowledge" },
-  { path: "/app/trichter", icon: Filter, labelKey: "sidebar.funnel" },
-  { path: "/app/ecosystem", icon: Globe, labelKey: "sidebar.ecosystem" },
-  { path: "/app/abonnement", icon: CreditCard, labelKey: "sidebar.subscription" },
-  { path: "/app/video-analyse", icon: Activity, labelKey: "sidebar.analysis" },
-  { path: "/app/feedback", icon: MessageSquarePlus, labelKey: "sidebar.feedback" },
-  { path: "/app/einstellungen", icon: Settings, labelKey: "sidebar.settings" },
-];
-
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
   const { t } = useTranslation();
-  const [collapsed, setCollapsed] = useState(false);
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [voiceOpen, setVoiceOpen] = useState(false);
-  const isSubPage = location.pathname !== "/app";
+  const [profileOpen, setProfileOpen] = useState(false);
 
-  const allNavItems = isAdmin
-    ? [...navItems, { path: "/app/admin", icon: Shield, labelKey: "sidebar.admin" }]
-    : navItems;
+  const isHome = location.pathname === "/app";
+  const isSubPage = !isHome;
+
+  // Bottom bar items
+  const bottomItems = [
+    { path: "/app", icon: CalendarDays, label: t("sidebar.dashboard", "Heute") },
+    { path: "__voice__", icon: Mic, label: t("sidebar.assistant", "Assistent") },
+    { path: "/app/archiv", icon: Archive, label: t("sidebar.archive", "Archiv") },
+  ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <AnimatePresence>
-        {mobileOpen && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-foreground/20 backdrop-blur-sm md:hidden"
-            onClick={() => setMobileOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
-      <aside className={`
-        fixed z-50 md:relative md:z-auto flex flex-col h-full bg-sidebar text-sidebar-foreground
-        transition-all duration-300 ease-in-out
-        ${collapsed ? "md:w-20" : "md:w-64"}
-        ${mobileOpen ? "w-64 translate-x-0" : "-translate-x-full md:translate-x-0"}
-      `}>
-        <div className="flex items-center gap-3 px-5 py-6 border-b border-sidebar-border">
-          <img src={huufiLogo} alt="HuufiApp" className="h-10 w-10 rounded-lg object-contain" />
-          {!collapsed && <span className="text-lg font-bold tracking-tight">HuufiApp</span>}
-          <button onClick={() => setMobileOpen(false)} className="ml-auto md:hidden text-sidebar-foreground/60 hover:text-sidebar-foreground"><X size={20} /></button>
+    <div className="flex flex-col h-screen overflow-hidden bg-background">
+      {/* Top Bar – minimal */}
+      <header className="flex items-center justify-between px-5 py-3 bg-background/80 backdrop-blur-sm border-b border-border">
+        <div className="flex items-center gap-3">
+          {isSubPage ? (
+            <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
+              <ArrowLeft size={20} />
+            </button>
+          ) : (
+            <img src={huufiLogo} alt="Huufi" className="h-8 w-8 rounded-lg object-contain" />
+          )}
+          {isSubPage && (
+            <span className="text-base font-semibold text-foreground">
+              {getPageTitle(location.pathname, t)}
+            </span>
+          )}
         </div>
 
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
-          {allNavItems.map((item) => {
-            const isActive = item.path === "/app" ? location.pathname === "/app" : location.pathname.startsWith(item.path);
+        <div className="flex items-center gap-2">
+          <LanguageSwitcher className="text-muted-foreground hover:text-foreground" />
+          {isAdmin && (
+            <Link to="/app/admin" className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
+              <Shield size={18} />
+            </Link>
+          )}
+          <div className="relative">
+            <button
+              onClick={() => setProfileOpen(!profileOpen)}
+              className="p-2 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground"
+            >
+              <User size={18} />
+            </button>
+            <AnimatePresence>
+              {profileOpen && (
+                <>
+                  <motion.div
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-40"
+                    onClick={() => setProfileOpen(false)}
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: -8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -8, scale: 0.95 }}
+                    className="absolute right-0 top-full mt-2 z-50 w-48 rounded-xl bg-card border border-border shadow-lg p-2"
+                  >
+                    <Link to="/app/einstellungen" onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm hover:bg-secondary transition-colors text-foreground">
+                      <Settings size={16} /> {t("sidebar.settings", "Einstellungen")}
+                    </Link>
+                    <Link to="/app/abonnement" onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm hover:bg-secondary transition-colors text-foreground">
+                      <Archive size={16} /> {t("sidebar.subscription", "Abo")}
+                    </Link>
+                    <Link to="/app/feedback" onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-2 px-3 py-2.5 rounded-lg text-sm hover:bg-secondary transition-colors text-foreground">
+                      <Mic size={16} /> {t("sidebar.feedback", "Feedback")}
+                    </Link>
+                    <hr className="my-1 border-border" />
+                    <button onClick={() => { setProfileOpen(false); signOut(); }}
+                      className="flex items-center gap-2 w-full px-3 py-2.5 rounded-lg text-sm hover:bg-destructive/10 text-destructive transition-colors">
+                      {t("nav.signOut", "Abmelden")}
+                    </button>
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
+      </header>
+
+      {/* Main content */}
+      <main className="flex-1 overflow-y-auto pb-24">
+        {children}
+      </main>
+
+      <InstallPrompt />
+
+      {/* Bottom Action Bar – 3 buttons */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-t border-border safe-bottom">
+        <div className="flex items-center justify-around px-6 py-2 max-w-md mx-auto">
+          {bottomItems.map((item) => {
+            if (item.path === "__voice__") {
+              return (
+                <button
+                  key="voice"
+                  onClick={() => setVoiceOpen(true)}
+                  className="relative -mt-7 flex items-center justify-center w-16 h-16 rounded-full shadow-lg bg-primary text-primary-foreground hover:scale-105 transition-transform"
+                >
+                  <item.icon size={26} />
+                </button>
+              );
+            }
+            const isActive = item.path === "/app"
+              ? location.pathname === "/app"
+              : location.pathname.startsWith(item.path);
             return (
-              <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150
-                  ${isActive ? "bg-sidebar-primary text-sidebar-primary-foreground" : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"}
-                  ${collapsed ? "justify-center" : ""}`}
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`flex flex-col items-center gap-1 p-2 transition-colors ${
+                  isActive ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                <item.icon size={20} />
-                {!collapsed && <span>{t(item.labelKey)}</span>}
+                <item.icon size={22} />
+                <span className="text-[10px] font-medium">{item.label}</span>
               </Link>
             );
           })}
-        </nav>
-
-        {/* Language switcher in sidebar */}
-        {!collapsed && (
-          <div className="px-4 py-2">
-            <LanguageSwitcher className="w-full justify-center" />
-          </div>
-        )}
-
-        <button onClick={signOut} className={`flex items-center gap-3 px-6 py-4 border-t border-sidebar-border text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors text-sm ${collapsed ? "justify-center px-3" : ""}`}>
-          <LogOut size={18} />
-          {!collapsed && <span>{t("nav.signOut")}</span>}
-        </button>
-
-        <button onClick={() => setCollapsed(!collapsed)} className="hidden md:flex items-center justify-center py-3 border-t border-sidebar-border text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors">
-          <ChevronLeft size={18} className={`transition-transform duration-300 ${collapsed ? "rotate-180" : ""}`} />
-        </button>
-      </aside>
-
-      <InstallPrompt />
-      <main className="flex-1 flex flex-col overflow-hidden">
-        <header className="flex items-center gap-4 px-6 py-4 border-b border-border bg-background/80 backdrop-blur-sm">
-          <button onClick={() => setMobileOpen(true)} className="md:hidden text-foreground/60 hover:text-foreground"><Menu size={22} /></button>
-          {isSubPage && (
-            <button onClick={() => navigate(-1)} className="hidden md:flex p-1.5 rounded-lg hover:bg-secondary transition-colors text-muted-foreground hover:text-foreground">
-              <ArrowLeft size={18} />
-            </button>
-          )}
-          <h1 className="text-lg font-semibold">
-            {t(allNavItems.find((n) => n.path === "/app" ? location.pathname === "/app" : location.pathname.startsWith(n.path))?.labelKey || "sidebar.dashboard")}
-          </h1>
-        </header>
-        <div className="flex-1 overflow-y-auto p-6 pb-24 md:pb-6">{children}</div>
-
-        {/* Mobile Bottom Action Bar */}
-        <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-t border-border safe-bottom">
-          <div className="flex items-center justify-around px-4 py-2">
-            <Link to="/app/notizen" className="flex flex-col items-center gap-1 p-2 text-muted-foreground hover:text-primary transition-colors">
-              <PenLine size={22} />
-              <span className="text-[10px] font-medium">{t("sidebar.notes")}</span>
-            </Link>
-            <button
-              onClick={() => setVoiceOpen(true)}
-              className="relative -mt-6 flex items-center justify-center w-16 h-16 rounded-full shadow-lg transition-all duration-200 bg-primary text-primary-foreground hover:scale-105"
-            >
-              <Mic size={26} />
-            </button>
-            <Link to="/app/pferde" className="flex flex-col items-center gap-1 p-2 text-muted-foreground hover:text-primary transition-colors">
-              <Plus size={22} />
-              <span className="text-[10px] font-medium">{t("sidebar.horses")}</span>
-            </Link>
-          </div>
         </div>
+      </div>
 
-        <VoiceAgent isOpen={voiceOpen} onClose={() => setVoiceOpen(false)} />
-      </main>
+      <VoiceAgent isOpen={voiceOpen} onClose={() => setVoiceOpen(false)} />
     </div>
   );
+}
+
+function getPageTitle(path: string, t: any): string {
+  const map: Record<string, string> = {
+    "/app/pferde": t("sidebar.horses", "Pferde"),
+    "/app/chat": t("sidebar.assistant", "Assistent"),
+    "/app/notizen": t("sidebar.notes", "Notizen"),
+    "/app/termine": t("sidebar.appointments", "Termine"),
+    "/app/kunden": t("sidebar.customers", "Kunden"),
+    "/app/tresor": t("sidebar.vault", "Tresor"),
+    "/app/wissen": t("sidebar.knowledge", "Wissen"),
+    "/app/trichter": t("sidebar.funnel", "Trichter"),
+    "/app/ecosystem": t("sidebar.ecosystem", "Ecosystem"),
+    "/app/abonnement": t("sidebar.subscription", "Abo"),
+    "/app/video-analyse": t("sidebar.analysis", "Analyse"),
+    "/app/feedback": t("sidebar.feedback", "Feedback"),
+    "/app/einstellungen": t("sidebar.settings", "Einstellungen"),
+    "/app/admin": t("sidebar.admin", "Admin"),
+    "/app/archiv": "Archiv",
+  };
+  return map[path] || "";
 }
