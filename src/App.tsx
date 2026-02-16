@@ -26,6 +26,7 @@ import KnowledgeVault from "./pages/app/KnowledgeVault";
 import Trichter from "./pages/app/Trichter";
 import Ecosystem from "./pages/app/Ecosystem";
 import Abonnement from "./pages/app/Abonnement";
+import VideoAnalyse from "./pages/app/VideoAnalyse";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ function AppRoutes() {
       <Route path="/app/trichter" element={<ProtectedRoute><AppLayout><Trichter /></AppLayout></ProtectedRoute>} />
       <Route path="/app/ecosystem" element={<ProtectedRoute><AppLayout><Ecosystem /></AppLayout></ProtectedRoute>} />
       <Route path="/app/abonnement" element={<ProtectedRoute><AppLayout><Abonnement /></AppLayout></ProtectedRoute>} />
+      <Route path="/app/video-analyse" element={<ProtectedRoute><AppLayout><VideoAnalyse /></AppLayout></ProtectedRoute>} />
       <Route path="/app/admin" element={<ProtectedRoute><AppLayout><AdminDashboard /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
