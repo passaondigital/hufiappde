@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      addon_purchases: {
+        Row: {
+          addon_key: string
+          addon_type: string
+          amount: number
+          created_at: string
+          id: string
+          stripe_session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          addon_key: string
+          addon_type: string
+          amount: number
+          created_at?: string
+          id?: string
+          stripe_session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          addon_key?: string
+          addon_type?: string
+          amount?: number
+          created_at?: string
+          id?: string
+          stripe_session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ai_usage_log: {
         Row: {
           created_at: string
@@ -678,6 +708,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      user_balances: {
+        Row: {
+          ai_tokens_remaining: number
+          created_at: string
+          id: string
+          storage_extra_gb: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          ai_tokens_remaining?: number
+          created_at?: string
+          id?: string
+          storage_extra_gb?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          ai_tokens_remaining?: number
+          created_at?: string
+          id?: string
+          storage_extra_gb?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       user_connections: {
         Row: {
