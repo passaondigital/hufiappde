@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Settings, Mail, Lock, User, Check, Bell } from "lucide-react";
+import { Settings, Mail, Lock, User, Check, Bell, ImagePlus, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -15,12 +15,17 @@ export default function Einstellungen() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [saving, setSaving] = useState(false);
+  const [chatBgUrl, setChatBgUrl] = useState<string | null>(null);
+  const [uploadingBg, setUploadingBg] = useState(false);
 
   useEffect(() => {
     if (!user) return;
     setEmail(user.email || "");
-    supabase.from("profiles").select("display_name").eq("user_id", user.id).maybeSingle().then(({ data }) => {
-      if (data) setDisplayName(data.display_name || "");
+    supabase.from("profiles").select("display_name, chat_bg_url").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+      if (data) {
+        setDisplayName(data.display_name || "");
+        setChatBgUrl((data as any).chat_bg_url || null);
+      }
     });
   }, [user]);
 
@@ -52,6 +57,35 @@ export default function Einstellungen() {
     setSaving(false);
   };
 
+  const handleBgUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+    if (!file.type.startsWith("image/")) { toast.error("Bitte nur Bilder hochladen"); return; }
+    if (file.size > 5 * 1024 * 1024) { toast.error("Maximal 5 MB"); return; }
+    setUploadingBg(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `${user.id}/chat-bg.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from("chat-backgrounds").upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("chat-backgrounds").getPublicUrl(path);
+      const publicUrl = urlData.publicUrl + "?t=" + Date.now();
+      await supabase.from("profiles").update({ chat_bg_url: publicUrl } as any).eq("user_id", user.id);
+      setChatBgUrl(publicUrl);
+      toast.success("Hintergrundbild gespeichert!");
+    } catch (err: any) {
+      toast.error(err.message || "Upload fehlgeschlagen");
+    }
+    setUploadingBg(false);
+  };
+
+  const removeBg = async () => {
+    if (!user) return;
+    await supabase.from("profiles").update({ chat_bg_url: null } as any).eq("user_id", user.id);
+    setChatBgUrl(null);
+    toast.success("Hintergrundbild entfernt");
+  };
+
   return (
     <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
@@ -78,6 +112,30 @@ export default function Einstellungen() {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50">
           <Check size={14} /> Speichern
         </button>
+      </motion.div>
+
+      {/* Chat Background */}
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.03 }} className="p-5 rounded-xl bg-card border border-border space-y-4">
+        <div className="flex items-center gap-2">
+          <ImagePlus size={18} className="text-primary" />
+          <h3 className="font-semibold text-foreground">Chat-Hintergrund</h3>
+        </div>
+        <p className="text-xs text-muted-foreground">Lade ein eigenes Bild hoch, das hinter deinem Chat angezeigt wird.</p>
+        {chatBgUrl && (
+          <div className="relative w-full h-32 rounded-lg overflow-hidden border border-border">
+            <img src={chatBgUrl} alt="Chat-Hintergrund" className="w-full h-full object-cover" />
+            <button onClick={removeBg} className="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 text-foreground hover:bg-destructive hover:text-destructive-foreground transition-colors">
+              <X size={14} />
+            </button>
+          </div>
+        )}
+        <label className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium cursor-pointer transition-opacity ${
+          uploadingBg ? "opacity-50 pointer-events-none" : ""
+        } bg-secondary text-secondary-foreground hover:bg-secondary/80`}>
+          <ImagePlus size={14} />
+          {uploadingBg ? "Hochladen..." : chatBgUrl ? "Bild ändern" : "Bild hochladen"}
+          <input type="file" accept="image/*" onChange={handleBgUpload} className="hidden" />
+        </label>
       </motion.div>
 
       {/* Email */}

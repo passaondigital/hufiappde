@@ -33,6 +33,7 @@ export default function Dashboard() {
   const [ttsEnabled, setTtsEnabled] = useState(false);
   const [ttsLoading, setTtsLoading] = useState(false);
   const [accountType, setAccountType] = useState<"free" | "pro">("free");
+  const [chatBgUrl, setChatBgUrl] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -47,11 +48,13 @@ export default function Dashboard() {
     Promise.all([
       supabase.from("chat_messages").select("*").eq("user_id", user.id).order("created_at"),
       supabase.from("user_subscriptions").select("plan").eq("user_id", user.id).eq("is_active", true).maybeSingle(),
-    ]).then(([{ data: msgs }, { data: sub }]) => {
+      supabase.from("profiles").select("chat_bg_url").eq("user_id", user.id).maybeSingle(),
+    ]).then(([{ data: msgs }, { data: sub }, { data: profile }]) => {
       if (msgs && msgs.length > 0) {
         setMessages(msgs.map((m) => ({ id: m.id, role: m.role as "user" | "assistant", content: m.content })));
       }
       setAccountType(sub?.plan === "premium" ? "pro" : "free");
+      setChatBgUrl((profile as any)?.chat_bg_url || null);
       setLoadingHistory(false);
     });
   }, [user]);
@@ -171,7 +174,15 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-8rem)] max-w-2xl mx-auto px-4">
+    <div className="flex flex-col h-[calc(100vh-8rem)] max-w-2xl mx-auto px-4 relative">
+      {/* Custom background */}
+      {chatBgUrl && (
+        <div
+          className="absolute inset-0 z-0 rounded-xl overflow-hidden opacity-15 pointer-events-none"
+          style={{ backgroundImage: `url(${chatBgUrl})`, backgroundSize: "cover", backgroundPosition: "center" }}
+        />
+      )}
+      <div className="relative z-10 flex flex-col h-full">
       <OnboardingTour />
       <MvpQuestionPrompt />
 
@@ -347,6 +358,7 @@ export default function Dashboard() {
             <Send size={18} />
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
