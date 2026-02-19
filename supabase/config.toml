@@ -35,3 +35,9 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.smart-notifications]
+verify_jwt = false
+
+[functions.notify-admin-feedback]
+verify_jwt = false

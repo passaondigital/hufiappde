@@ -622,6 +622,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          chat_bg_url: string | null
           connect_code: string | null
           created_at: string
           display_name: string | null
@@ -638,6 +639,7 @@ export type Database = {
           webauthn_credential_id: string | null
         }
         Insert: {
+          chat_bg_url?: string | null
           connect_code?: string | null
           created_at?: string
           display_name?: string | null
@@ -654,6 +656,7 @@ export type Database = {
           webauthn_credential_id?: string | null
         }
         Update: {
+          chat_bg_url?: string | null
           connect_code?: string | null
           created_at?: string
           display_name?: string | null
