@@ -316,32 +316,6 @@ export default function Dashboard() {
 
         {/* Input row */}
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => {
-              const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-              if (!SpeechRecognition) { toast.error("Spracherkennung nicht unterstützt."); return; }
-              if (isRecording) { recognitionRef.current?.stop(); setIsRecording(false); return; }
-              const recognition = new SpeechRecognition();
-              recognition.lang = "de-DE";
-              recognition.continuous = false;
-              recognition.interimResults = false;
-              recognitionRef.current = recognition;
-              recognition.onresult = (event: any) => {
-                const transcript = event.results[0][0].transcript;
-                setInput((prev) => (prev ? prev + " " : "") + transcript);
-                setIsRecording(false);
-              };
-              recognition.onerror = () => { setIsRecording(false); toast.error("Spracherkennung fehlgeschlagen"); };
-              recognition.onend = () => setIsRecording(false);
-              recognition.start();
-              setIsRecording(true);
-            }}
-            className={`p-2.5 rounded-xl transition-all ${
-              isRecording ? "bg-destructive text-destructive-foreground animate-pulse" : "bg-secondary text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {isRecording ? <MicOff size={18} /> : <Mic size={18} />}
-          </button>
           <input
             ref={inputRef}
             value={input}
