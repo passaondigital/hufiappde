@@ -27,7 +27,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Bottom bar items
   const bottomItems = [
     { path: "/app", icon: CalendarDays, label: t("sidebar.dashboard", "Heute") },
-    { path: "/app/chat", icon: Mic, label: t("sidebar.assistant", "Assistent"), isCenter: true },
+    { path: "__voice__", icon: Mic, label: t("sidebar.assistant", "Assistent"), isCenter: true },
     { path: "/app/archiv", icon: Archive, label: t("sidebar.archive", "Archiv") },
   ];
 
