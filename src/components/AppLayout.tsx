@@ -120,13 +120,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
             if ((item as any).isCenter) {
               return (
-                <Link
+                <button
                   key={item.path}
-                  to={item.path}
+                  onClick={() => setVoiceOpen(true)}
+                  aria-label={item.label}
                   className="relative -mt-7 flex items-center justify-center w-16 h-16 rounded-full shadow-lg bg-primary text-primary-foreground hover:scale-105 transition-transform"
                 >
                   <item.icon size={26} />
-                </Link>
+                </button>
               );
             }
 
