@@ -20,7 +20,8 @@ export default defineConfig(({ mode }) => ({
       registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "robots.txt"],
       workbox: {
-        navigateFallbackDenylist: [/^\/~oauth/],
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/assets\//],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,webp}"],
       },
       manifest: {
