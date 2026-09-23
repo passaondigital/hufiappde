@@ -132,3 +132,14 @@ Vor jeder größeren Mission:
 6. Preview/Test
 7. Rollback sichern
 8. kontrolliert deployen
+
+
+## Projektübergreifender Standard
+
+HufiApp folgt zusätzlich dem zentralen HUFI Universal Project Standard im Repository `passaondigital/hufi-factory`:
+
+- `docs/00_HUFI_UNIVERSAL_PROJECT_STANDARD.md`
+- `docs/01_NEW_PROJECT_BOOTSTRAP.md`
+- `docs/02_AI_AGENT_AND_RELEASE_STANDARD.md`
+
+Bei Widersprüchen gilt: projektspezifische aktuelle Live-/Repo-Wahrheit entscheidet über den konkreten Ist-Stand; der Universal Standard definiert die wiederverwendbaren Arbeits-, Sicherheits-, Evidence- und Release-Regeln.
