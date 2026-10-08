@@ -1,3 +1,5 @@
+> **PRODUKTENTSCHEIDUNG 08.10.2026:** HufiApp wird NICHT mehr als eigenständiges Endkundenprodukt entwickelt. Hufi-Funktionen sollen sicher in **HufManager OS** integriert werden. Siehe [Migration/Produktbeschluss](docs/HUFIAPP_HUFMANAGER_OS_TRANSITION_2026-10-08.md) und [HufManager-OS-Source-of-Truth](https://github.com/passaondigital/hufmanager/blob/main/docs/product/HUFMANAGER_OS_PRODUCT_CANON_2026-10-08.md). Bestehende Dienste, Daten und Domains nicht ohne gesonderte Freigabe verändern; die Regeln dieses Dokuments bleiben verbindlich.
+
 # Agent Instructions
 <!-- HUFI_ACCOUNT_PROJECT_STANDARD_V1 -->
 ## HUFI Account Project Standard
