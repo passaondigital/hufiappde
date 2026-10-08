@@ -1,3 +1,11 @@
+# HufiApp – historischer Code / Integrationsquelle
+
+**Produktentscheidung vom 08.10.2026:** Keine neue eigenständige HufiApp für Endkunden. Geplante Voice-, Guthaben- und Automationsfunktionen werden nach Sicherheits- und Architekturprüfung in **HufManager OS** integriert. Die verbindliche [HufManager-OS-Produktstrategie](https://github.com/passaondigital/hufmanager/blob/main/docs/product/HUFMANAGER_OS_PRODUCT_CANON_2026-10-08.md) und die [HufiApp-Übergabeentscheidung](docs/HUFIAPP_HUFMANAGER_OS_TRANSITION_2026-10-08.md) gelten ab sofort als Produktbezug. **Dies ist keine technische Freigabe**, bestehende Dienste oder Daten zu löschen, umzuleiten oder zu deployen.
+
+---
+
+## Archivierter ursprünglicher Projekttext
+
 # Welcome to your Lovable project
 
 ## Project info
