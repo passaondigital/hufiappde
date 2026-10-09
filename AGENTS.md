@@ -1,3 +1,5 @@
+> **Verbindliche Benennung ab 09.10.2026:** Einziges Kundenprodukt **HufManagerOS v1.0**. HufiApp bleibt ein historisches Code-Repository; frühere Namensnennungen sind nicht als Auftrag für eine separate Endkunden-App zu verstehen. HufiOS/HufiBoss bleiben interne Systeme. v1.0 bedeutet Produkt-/Dokumentationsversion, nicht technischer Release oder Deploy-GO. Bestehende Sicherheitsregeln bleiben unverändert verbindlich.
+
 > **PRODUKTENTSCHEIDUNG 08.10.2026:** HufiApp wird NICHT mehr als eigenständiges Endkundenprodukt entwickelt. Hufi-Funktionen sollen sicher in **HufManager OS** integriert werden. Siehe [Migration/Produktbeschluss](docs/HUFIAPP_HUFMANAGER_OS_TRANSITION_2026-10-08.md) und [HufManager-OS-Source-of-Truth](https://github.com/passaondigital/hufmanager/blob/main/docs/product/HUFMANAGER_OS_PRODUCT_CANON_2026-10-08.md). Bestehende Dienste, Daten und Domains nicht ohne gesonderte Freigabe verändern; die Regeln dieses Dokuments bleiben verbindlich.
 
 # Agent Instructions
