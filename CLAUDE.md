@@ -1,3 +1,5 @@
+> **WICHTIGE AKTUALISIERUNG 09.10.2026 — HufManagerOS v1.0:** Die nachstehende HufiApp-/Infrastrukturbeschreibung ist historisch und NICHT der aktuelle HufManagerOS-Produktivstand. Keine separate HufiApp als neues Endkundenprodukt; bestehende Codebasis nur kontrolliert wiederverwenden. Maßgebliche HufManagerOS-PROD ist OVH, nachgewiesener Live-Commit 53ed0add; XXL ist wiederhergestellte KI-/Entwicklungswerkstatt, KEINE HufManagerOS-PROD. Supabase-PROD-Projekte nicht vermischen; vor jedem Zugriff tatsächliche Zielumgebung prüfen. v1.0 ist Benennung, kein technischer Release. Keine Deploys, Datenbank-/SSH-/DNS-Änderungen ohne Owner-GO. Frühere Pfade/Ports und Angaben in diesem Dokument sind nicht automatisch aktuell.
+
 # HufiApp – Claude Code Kontext
 
 ## Projekt
