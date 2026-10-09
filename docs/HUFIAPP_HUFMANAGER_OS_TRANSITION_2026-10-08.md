@@ -1,3 +1,5 @@
+> **09.10.2026 – VERBINDLICHE NAMENSERGÄNZUNG:** Zielprodukt heißt **HufManagerOS v1.0** (genaue Schreibweise), ein Kundenprodukt. „HufiApp“ bleibt lediglich Bestands-Code-/Integrationsquelle. Standard 19,95 €/Monat manuell, Premium 49,90 €/Monat Hufi Voice/KI, Team Premium 199 €/Monat Zieltarif; Besitzer kostenlos, Partnerpreise offen. v1.0 ist Produkt-/Dokumentationsversion, KEIN technischer Go-Live/SALE_READY. Alle bestehenden Daten/Server/Domains bleiben unangetastet.
+
 # HufiApp → HufManager OS: Produktentscheidung vom 08.10.2026
 
 **Status:** Verbindliche Produktstrategie des Owners; keine technische Migration, keine Freigabe zum Abschalten vorhandener Dienste.
